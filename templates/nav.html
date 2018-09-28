@@ -1,0 +1,100 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>EWS CLOUD</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    {% block css %}{% endblock %}
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo">EWS  CLOUD</div>
+        <!-- 头部区域（可配合layui已有的水平导航） -->
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;">
+{#                    <img src="http://t.cn/RCzsdCq" class="layui-nav-img">#}
+                    wangyijie
+                </a>
+                <dl class="layui-nav-child">
+                    <dd><a href="">基本资料</a></dd>
+                    <dd><a href="">安全设置</a></dd>
+                </dl>
+            </li>
+            <li class="layui-nav-item"><a href="">退出</a></li>
+        </ul>
+    </div>
+
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+            <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+            <ul class="layui-nav layui-nav-tree" lay-filter="test">
+                <dl class="layui-nav-item layui-nav-itemed">
+                    <a href="/dashboard/">资源面板</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="">资源</a></dd>
+                        <dd><a href="">监控</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a class="" href="javascript:;">主机管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="{% url 'hosts:hostlist' %}">主机列表</a></dd>
+                        <dd><a href="{% url 'hosts:firewall' %}">防火墙</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a class="" href="javascript:;">镜像仓库</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;">公有仓库</a></dd>
+                        <dd><a href="javascript:;">测试仓库</a></dd>
+                        <dd><a href="javascript:;">发布仓库</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a class="" href="javascript:;">项目部署</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;">服务部署</a></dd>
+                        <dd><a href="javascript:;">编排部署</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a class="" href="javascript:;">项目维护</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;">服务列表</a></dd>
+                        <dd><a href="javascript:;">项目列表</a></dd>
+                        <dd><a href="javascript:;">项目编排</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item"><a href="javascript:;">持续集成</a></li>
+                <li class="layui-nav-item"><a href="javascript:;">我的集群</a></li>
+                <li class="layui-nav-item"><a href="javascript:;">我的项目</a></li>
+                <li class="layui-nav-item"><a href="{% url 'users:grouplist' %}">我的团队</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="layui-body">
+        <!-- 内容主体区域 -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <div class="layui-footer">
+        <!-- 底部固定区域 -->
+        © ews.gisquest.com
+    </div>
+</div>
+<script src="/static/layui/layui.js"></script>
+<script>
+    //JavaScript代码区域
+    layui.use('element', function () {
+        var element = layui.element;
+
+    });
+</script>
+{% block script %}{% endblock %}
+</body>
+</html>

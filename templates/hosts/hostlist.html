@@ -1,0 +1,97 @@
+{% extends 'nav.html' %}
+{% load staticfiles %}
+{% block css %}
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+{% endblock %}
+
+{% block content %}
+    <div class="layui-main">
+        <div class="layui-row">
+            <div class="layui-col-xs6">
+                <div class="layui-inline">
+                    <input class="layui-input" name="id" id="demoReload" autocomplete="off">
+                </div>
+                <button class="layui-btn" data-type="reload">搜索</button>
+            </div>
+            <div class="layui-col-xs6" align="right">
+                <div>
+                    <button class="layui-btn">添加</button>
+                </div>
+            </div>
+
+        </div>
+        <div align="center">
+            <table id="hostlist" lay-filter="tableDemo"></table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-xs" lay-event="container" href="{% url 'hosts:containerlist' %}">容器</a>
+        <a class="layui-btn layui-btn-xs" lay-event="image" href="{% url 'hosts:imagelist' %}">镜像</a>
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+    <script>
+        layui.use(['table', 'jquery', 'layer', 'form'], function () {
+            var table = layui.table,
+                layer = layui.layer,
+                form = layui.form,
+                $ = layui.jquery;
+
+            //方法级渲染
+            table.render({
+                elem: '#hostlist', //指定原始表格元素选择器（推荐id选择器）
+                url: '{% url 'hosts:get_hostlist' %}',
+                method: 'get',
+                page: true, //分页
+                limit: 10,
+                skin: 'line', //行边框风格
+                even: true, //开启隔行背景
+                height: 'full-160', //高度
+                cols: [[
+                    {checkbox: true, fixed: true},
+                    {field: 'id', title: 'ID', width: '5%'},
+                    {field: 'ip', title: 'IP', width: '15%'},
+                    {field: 'state', title: '状态', width: '10%'},
+                    {field: 'containers', title: '容器数', width: '10%'},
+                    {field: 'cpu_cores', title: 'CPU', width: '10%'},
+                    {field: 'memory', title: '内存', width: '10%'},
+                    {field: 'description', title: '备注', width: '15%'},
+                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '25%'},
+                ]],
+            });
+
+
+            //监听工具条,每行
+            table.on('tool(tableDemo)', function (obj) { //注：tool是工具条事件名，host是table原始容器的属性 lay-filter="对应的值"
+                var data = obj.data; //获得当前行数据
+                var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+                var tr = obj.tr; //获得当前行 tr 的DOM对象
+                if (layEvent === 'container') { //跳转
+                    //do somehing
+                } else if (layEvent === 'image') {
+                    //do something
+
+                } else if (layEvent === 'del') { //删除
+                    layer.confirm('真的删除行么', function (index) {
+                        obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                        layer.close(index);
+                        //向服务端发送删除指令
+                    });
+                } else if (layEvent === 'edit') { //编辑
+                    //do something
+
+                    //同步更新缓存对应的值
+                    obj.update({
+                        username: '123'
+                        , title: 'xxx'
+                    });
+                }
+            });
+        });
+    </script>
+
+{% endblock %}
