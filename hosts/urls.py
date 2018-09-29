@@ -25,5 +25,6 @@ urlpatterns = [
     url(r'^imagelist/', views.imagelist, name='imagelist'),
     url(r'^containerlist', views.containerlist, name='containerlist'),
     url(r'^get_imagelist/', views.get_imagelist, name='get_imagelist'),
+    url(r'^get_containerlist/', views.get_containerlist, name='get_contaienrlist'),
 
 ]

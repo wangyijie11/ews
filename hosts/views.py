@@ -65,22 +65,48 @@ def get_imagelist(request):
     page = request.GET.get('page')
     rows = request.GET.get('limit')
     id = request.GET.get('id')
-    ip = EwsHost.objects.get(pk=1).ip
+    ip = EwsHost.objects.get(pk=id).ip
     i = (int(page) - 1) * int(rows)
     j = (int(page) - 1) * int(rows) + int(rows)
     # 根据ip，调用docker engine api获取镜像
     client = docker.DockerClient(base_url='tcp://' + ip + ':2375')
-#    client = docker.from_env()
     images = client.images.list()
-    total = images.count()
+    total = len(images)
     images = images[i:j]
     resultdict = {}
     dict = []
     for img in images:
         dic = {}
-        dic['id'] = img.id
-        dic['image'] = img.attrs
         dic['short_id'] = img.short_id
+        dic['repotag'] = img.attrs.get('RepoTags')
+        dict.append(dic)
+    resultdict['code'] = 0
+    resultdict['msg'] = ""
+    resultdict['count'] = total
+    resultdict['data'] = dict
+    return JsonResponse(resultdict, safe=False)
+
+
+@csrf_exempt
+def get_containerlist(request):
+    page = request.GET.get('page')
+    rows = request.GET.get('limit')
+    id = request.GET.get('id')
+    ip = EwsHost.objects.get(pk=id).ip
+    i = (int(page) - 1) * int(rows)
+    j = (int(page) - 1) * int(rows) + int(rows)
+    # 根据ip，调用docker engine api获取容器
+    client = docker.DockerClient(base_url='tcp://' + ip + ':2375')
+    containers = client.containers.list()
+    total = len(containers)
+    containers = containers[i:j]
+    resultdict = {}
+    dict = []
+    for cont in containers:
+        dic = {}
+        dic['short_id'] = cont.short_id
+        dic['name'] = cont.name
+        dic['status'] = cont.status
         dict.append(dic)
     resultdict['code'] = 0
     resultdict['msg'] = ""

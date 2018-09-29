@@ -16,17 +16,23 @@
 
 
     <script>
+        function getQueryString(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null) return unescape(r[2]);
+            return null;
+        }
         layui.use(['table', 'jquery', 'layer', 'form'], function () {
-
             var table = layui.table,
                 layer = layui.layer,
                 form = layui.form,
-                $ = layui.jquery
+                $ = layui.jquery,
+                id = getQueryString("id")
 
             //方法级渲染
             table.render({
                 elem: '#imagelist', //指定原始表格元素选择器（推荐id选择器）
-                url: '{% url 'hosts:get_imagelist' %}',
+                url: '{% url 'hosts:get_imagelist' %}?id=' + id,
                 method: 'get',
                 page: true, //分页
                 limit: 10,
@@ -35,8 +41,9 @@
                 height: 'full-160', //高度
                 cols: [[
                     {checkbox: true, fixed: true},
-                    {field: '镜像', title: 'image', width: '85%'},
-                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '15%'},
+                    {field: 'short_id', title: '镜像ID', width: '20%'},
+                    {field: 'repotag', title: '镜像名', width: '60%'},
+                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '20%'},
                 ]],
 
             });

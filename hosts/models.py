@@ -9,6 +9,7 @@ from django.db import models
 
 
 class EwsHost(models.Model):
+    id = models.IntegerField(primary_key=True)
     ip = models.CharField(max_length=255, blank=True, null=True)
     hostname = models.CharField(max_length=255, blank=True, null=True)
     description = models.CharField(max_length=255, blank=True, null=True)
@@ -17,10 +18,14 @@ class EwsHost(models.Model):
     disk = models.IntegerField(blank=True, null=True)
     docker_version = models.CharField(max_length=255, blank=True, null=True)
     os = models.CharField(max_length=255, blank=True, null=True)
+    created_time = models.DateTimeField(blank=True, null=True)
     extend = models.CharField(max_length=255, blank=True, null=True)
     tab_user_id = models.IntegerField(blank=True, null=True)
     tab_group_id = models.IntegerField(blank=True, null=True)
 
+    def __str__(self):
+        return self.ip
+
     class Meta:
-        managed = False
         db_table = 'ews_host'
+        ordering = ["-created_time"]
