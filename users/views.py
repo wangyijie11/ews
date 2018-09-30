@@ -4,14 +4,12 @@ from django.shortcuts import redirect
 
 
 # 登录
-def login(request):
-    pass
+def gotologin(request):
     return render(request, 'login.html')
 
 
 # 注销
 def logout(request):
-    pass
     return redirect('/login/')
 
 
