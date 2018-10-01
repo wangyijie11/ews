@@ -22,4 +22,5 @@ urlpatterns = [
     url(r'^userlist/', views.userlist, name='userlist'),
     url(r'^grouplist/', views.grouplist, name='grouplist'),
 
+
 ]

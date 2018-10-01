@@ -19,10 +19,9 @@ from django.conf.urls import include
 from django.conf.urls import url
 from users import views
 
-
 urlpatterns = [
     url(r'^dashboard/', views.dashboard, name='dashboard'),
-    url(r'^login/', views.gotologin, name="gotologin"),
+    url(r'^login/', views.login, name='login'),
     url(r'^$', views.dashboard, name="index"),
     path('admin/', admin.site.urls),
     path('hosts/', include("hosts.urls")),
