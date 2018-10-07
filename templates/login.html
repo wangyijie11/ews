@@ -40,7 +40,6 @@
         var form = layui.form;
         var $ = layui.jquery;
         form.on('submit(login)',function (data) {
-            // console.log(data.field);
             $.post({
                 url: '{% url 'login' %}',
                 data: data.field,

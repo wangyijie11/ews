@@ -8,7 +8,7 @@ import json
 
 
 # Create your views here.
-# 登录
+# 用户登录
 def login(request):
     if request.method == "POST":
         account = request.POST.get('account', None)
