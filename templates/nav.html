@@ -15,9 +15,9 @@
         <!-- 头部区域（可配合layui已有的水平导航） -->
         <ul class="layui-nav layui-layout-right">
             <li class="layui-nav-item">
-                <a href="javascript:;">
+                <a>
 {#                    <img src="http://t.cn/RCzsdCq" class="layui-nav-img">#}
-                    wangyijie
+                    {{ request.session.username }}
                 </a>
                 <dl class="layui-nav-child">
                     <dd><a href="">基本资料</a></dd>
@@ -32,7 +32,7 @@
         <div class="layui-side-scroll">
             <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
             <ul class="layui-nav layui-nav-tree" lay-filter="test">
-                <dl class="layui-nav-item layui-nav-itemed">
+                <li class="layui-nav-item layui-nav-itemed">
                     <a href="/dashboard/">资源面板</a>
                     <dl class="layui-nav-child">
                         <dd><a href="">资源</a></dd>
