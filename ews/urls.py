@@ -22,6 +22,7 @@ from users import views
 urlpatterns = [
     url(r'^dashboard/', views.dashboard, name='dashboard'),
     url(r'^login/', views.login, name='login'),
+    url(r'^logout/', views.logout, name='logout'),
     url(r'^$', views.dashboard, name="index"),
     path('admin/', admin.site.urls),
     path('hosts/', include("hosts.urls")),

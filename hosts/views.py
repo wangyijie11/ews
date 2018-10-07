@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.shortcuts import redirect
 from django.shortcuts import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -7,24 +8,45 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from hosts.models import EwsHost
 import docker
+from hosts.hostmgr import GetLinuxMessage
 
 # Create your views here.
 
 
 def hostlist(request):
-    return render(request, 'hosts/hostlist.html', locals())
+    is_login = request.session.get('is_login', False)  # 获取session里的值
+    if is_login:
+        ews_username = request.session.get('ews_username')
+        return render(request, 'hosts/hostlist.html', {'ews_username': ews_username})
+    else:
+        return redirect('/login/')
 
 
 def firewall(request):
-    return render(request, 'hosts/firewall.html', locals())
+    is_login = request.session.get('is_login', False)  # 获取session里的值
+    if is_login:
+        ews_username = request.session.get('ews_username')
+        return render(request, 'hosts/firewall.html', {'ews_username': ews_username})
+    else:
+        return redirect('/login/')
 
 
 def imagelist(request):
-    return render(request, 'hosts/imagelist.html', locals())
+    is_login = request.session.get('is_login', False)  # 获取session里的值
+    if is_login:
+        ews_username = request.session.get('ews_username')
+        return render(request, 'hosts/imagelist.html', {'ews_username': ews_username})
+    else:
+        return redirect('/login/')
 
 
 def containerlist(request):
-    return render(request, 'hosts/containerlist.html', locals())
+    is_login = request.session.get('is_login', False)  # 获取session里的值
+    if is_login:
+        ews_username = request.session.get('ews_username')
+        return render(request, 'hosts/containerlist.html', {'ews_username': ews_username})
+    else:
+        return redirect('/login/')
 
 
 @csrf_exempt
@@ -58,6 +80,22 @@ def get_hostlist(request):
     resultdict['count'] = total
     resultdict['data'] = dict
     return JsonResponse(resultdict, safe=False)
+
+
+# 主机GET/POST
+def host(request):
+    if request.session.get('is_login', None):
+        if request.method == 'POST':
+            host = request.POST.get('host')
+            port = request.POST.get('port')
+            user = request.POST.get('user')
+            password = request.POST.get('password')
+
+
+
+
+
+
 
 
 @csrf_exempt

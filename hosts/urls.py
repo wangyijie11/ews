@@ -26,5 +26,6 @@ urlpatterns = [
     url(r'^containerlist', views.containerlist, name='containerlist'),
     url(r'^get_imagelist/', views.get_imagelist, name='get_imagelist'),
     url(r'^get_containerlist/', views.get_containerlist, name='get_contaienrlist'),
+    url(r'^host/', views.host, name='host'),
 
 ]

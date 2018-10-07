@@ -10,6 +10,9 @@ import json
 # Create your views here.
 # 用户登录
 def login(request):
+    if request.session.get('is_login', None):
+        return redirect('/dashboard/')
+
     if request.method == "POST":
         account = request.POST.get('account', None)
         password = request.POST.get('password', None)
@@ -19,9 +22,10 @@ def login(request):
                 user = EwsUser.objects.get(account=account)
                 username = EwsUser.objects.get(account=account).username
                 if user.password == password:
+                    request.session['is_login'] = True
                     request.session['ews_account'] = account
                     request.session['ews_username'] = username
-                    request.session.set_expiry(600)
+                    request.session.set_expiry(6000)
                     return HttpResponse(json.dumps({
                         "status": 1,  # 正确登录
                     }))
@@ -41,12 +45,19 @@ def login(request):
 
 # 注销
 def logout(request):
+    if not request.session.get('is_login', False):
+        return redirect('/login/')
+    request.session.flush()
     return redirect('/login/')
 
 
 def dashboard(request):
-    pass
-    return render(request, 'dashboard.html')
+    is_login = request.session.get('is_login', False)  # 获取session里的值
+    if is_login:
+        ews_username = request.session.get('ews_username')
+        return render(request, 'dashboard.html', {'ews_username': ews_username})
+    else:
+        return redirect('/login/')
 
 
 # 用户列表

@@ -5,25 +5,47 @@
 {% endblock %}
 
 {% block content %}
-    <div class="layui-main">
-        <div class="layui-row">
-            <div class="layui-col-xs6">
-                <div class="layui-inline">
-                    <input class="layui-input" name="id" id="demoReload" autocomplete="off">
+    <div class="layui-row" id="hostadd" style="display:none;">
+        <div class="layui-col-md12">
+            <form class="layui-form">
+                {% csrf_token %}
+                <br>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">IP：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="host" class="layui-input" lay-filter="required">
+                    </div>
                 </div>
-                <button class="layui-btn" data-type="reload">搜索</button>
-            </div>
-            <div class="layui-col-xs6" align="right">
-                <div>
-                    <button class="layui-btn">添加</button>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">端口：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="port" class="layui-input" lay-filter="required">
+                    </div>
                 </div>
-            </div>
-
-        </div>
-        <div align="center">
-            <table id="hostlist" lay-filter="tableDemo"></table>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">账号：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="user" class="layui-input" lay-filter="required">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">密码：</label>
+                    <div class="layui-input-inline">
+                        <input type="password" name="password" class="layui-input" lay-filter="required">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                        <button type="button" class="layui-btn layui-btn-normal" lay-filter="hostcommit">确认</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
+
+    <table id="hostlist" lay-filter="tableDemo"></table>
+
 {% endblock %}
 
 {% block script %}
@@ -32,6 +54,14 @@
         <a class="layui-btn layui-btn-xs" lay-event="image">镜像</a>
         <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+    <script type="text/html" id="toolbarDemo">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+            <button class="layui-btn layui-btn-sm" lay-event="delete">删除</button>
+            <button class="layui-btn layui-btn-sm" lay-event="update">编辑</button>
+        </div>
     </script>
 
     <script>
@@ -50,7 +80,9 @@
                 limit: 10,
                 skin: 'line', //行边框风格
                 even: true, //开启隔行背景
-                height: 'full-160', //高度
+                {#height: '', //高度#}
+                {#width: '', // 宽度#}
+                toolbar: '#toolbarDemo',
                 cols: [[
                     {checkbox: true},
                     {field: 'id', title: 'ID', width: '5%'},
@@ -92,6 +124,47 @@
                     });
                 }
             });
+            //监听工具栏事件,头部
+            table.on('toolbar(tableDemo)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                switch (obj.event) {
+                    case 'add':
+                        layer.open({
+                            type: 1,
+                            title: "添加主机",
+                            area: ['500px', '350px'],
+                            content: $('#hostadd').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
+                        });
+                        break;
+                    case 'delete':
+                        layer.confirm();
+                        break;
+                    case 'update':
+                        layer.msg('编辑');
+                        break;
+                }
+                ;
+            });
+
+            form.on('submit(hostcommit)',function (data) {
+            $.post({
+                url: '{% url 'hosts:host' %}',
+                data: data.field,
+                success:function (data) {
+                    data = JSON.parse(data);
+                    if (data["status"] == 1){
+                        window.location.href = "{% url 'dashboard' %}";
+                    }else if (data["status"] == 0){
+                        layer.msg('');
+                    }else if (data["status"] == 2){
+                        layer.msg('');
+                    }else if (data["status"] == 3){
+                        layer.msg('');
+                    }
+                }
+            })
+            return false;
+        })
         });
     </script>
 
