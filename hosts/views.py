@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from hosts.models import EwsHost
 import docker
-from hosts.hostmgr import GetLinuxMessage
+from hosts.hostmgr import Centos7
 
 # Create your views here.
 
