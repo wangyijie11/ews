@@ -21,10 +21,12 @@ def login(request):
             try:
                 user = EwsUser.objects.get(account=account)
                 username = EwsUser.objects.get(account=account).username
+                accountid = EwsUser.objects.get(account=account).id
                 if user.password == password:
                     request.session['is_login'] = True
                     request.session['ews_account'] = account
                     request.session['ews_username'] = username
+                    request.session['ews_accountid'] = accountid
                     request.session.set_expiry(6000)
                     return HttpResponse(json.dumps({
                         "status": 1,  # 正确登录

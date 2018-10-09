@@ -8,16 +8,6 @@
 from django.db import models
 
 
-class EwsUserGroup(models.Model):
-    id = models.IntegerField(primary_key=True)
-    tab_user_id = models.IntegerField(blank=True, null=True)
-    tab_group_id = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'ews_user_group'
-
-
 class EwsUser(models.Model):
     id = models.IntegerField(primary_key=True)
     account = models.CharField(max_length=255, blank=True, null=True)
@@ -31,6 +21,9 @@ class EwsUser(models.Model):
     class Meta:
         db_table = 'ews_user'
 
+    def __str__(self):
+        return self.account
+
 
 class EwsGroup(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -38,6 +31,19 @@ class EwsGroup(models.Model):
     group_name = models.CharField(max_length=255, blank=True, null=True)
     created_time = models.DateTimeField(blank=True, null=True)
     group_json = models.CharField(max_length=255, blank=True, null=True)
+    members = models.ManyToManyField(EwsUser, through='EwsUserGroup')
 
     class Meta:
         db_table = 'ews_group'
+
+    def __str__(self):
+        return self.group_id
+
+
+class EwsUserGroup(models.Model):
+    id = models.IntegerField(primary_key=True)
+    tab_user = models.ForeignKey(EwsUser, on_delete=models.CASCADE)
+    tab_group = models.ForeignKey(EwsGroup, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'ews_user_group'

@@ -1,7 +1,8 @@
 import paramiko
 from subprocess import Popen, PIPE
 import re
-import os, sys
+import os
+import sys
 
 
 class Centos7(object):

@@ -10,10 +10,10 @@ from hosts.models import EwsHost
 import docker
 from hosts.hostmgr import Centos7
 import paramiko
+import time
+
 
 # Create your views here.
-
-
 def hostlist(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
@@ -50,6 +50,7 @@ def containerlist(request):
         return redirect('/login/')
 
 
+# 获取主机列表
 @csrf_exempt
 def get_hostlist(request):
     page = request.GET.get('page')
@@ -108,25 +109,43 @@ def add_pubkey(host, password, port=22, user='root'):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(hostname=host, port=port, username=user, password=password, timeout=5)
         ssh.exec_command('cat /tmp/id_rsa.pub >> /root/.ssh/authorized_keys ; rm -f /tmp/id_rsa.pub')
-    except Exception as e:
-        return e
-
+        return True
+    except Exception as ex:
+        return False
 
 # 主机GET/POST
 def host(request):
     if request.session.get('is_login', None):
+        ews_accountid = request.session.get('ews_accountid')
         if request.method == 'POST':
             host = request.POST.get('host')
-            port = request.POST.get('port')
+            # port = request.POST.get('port')
             user = request.POST.get('user')
             password = request.POST.get('password')
             try:
-                add_pubkey(host, password)
-                get_hostinfo(host)
-            except Exception as e:
-                return e
+                if not add_pubkey(host, password):
+                    return HttpResponse(json.dumps({"status": 1}))
+                data = get_hostinfo(host)
+                if data:
+                    new_host = models.EwsHost()
+                    new_host.ip = host
+                    new_host.hostname = data['hostname']
+                    new_host.disk = data['disk']
+                    new_host.memory = data['memory']
+                    new_host.os = data['version']
+                    new_host.cpu_cores = data['cpuinfo']
+                    new_host.created_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                    new_host.tab_user_id = ews_accountid
+                    new_host.save()
+                    return HttpResponse(json.dumps({"status": 0}))
+                else:
+                    return HttpResponse(json.dumps({"status": 2}))
+            except Exception as ex:
+                return HttpResponse(json.dumps({"status": 3}))
 
 
+
+# 获取镜像列表
 @csrf_exempt
 def get_imagelist(request):
     page = request.GET.get('page')
@@ -154,6 +173,7 @@ def get_imagelist(request):
     return JsonResponse(resultdict, safe=False)
 
 
+# 获取容器列表
 @csrf_exempt
 def get_containerlist(request):
     page = request.GET.get('page')
