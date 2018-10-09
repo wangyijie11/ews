@@ -84,8 +84,8 @@ def get_hostlist(request):
 
 
 # 获取主机信息
-def get_hostinfo(host, port, user, password):
-    session = Centos7(host, port, user, password)  # 类Centos7的connect方法需要改成ssh连接
+def get_hostinfo(host):
+    session = Centos7(host)  # 类Centos7的connect方法需要改成ssh连接
     hostname = session.get_hostname()
     cpuinfo = session.get_cpuinfo()
     memory = session.get_memory()
@@ -94,15 +94,23 @@ def get_hostinfo(host, port, user, password):
     data = {'hostname': hostname, 'cpuinfo': cpuinfo, 'memory': memory, 'version': version, 'disk': disk}
     return data
 
+
 # 添加公钥
-def add_pubkey(host, port, user, password):
+def add_pubkey(host, password, port=22, user='root'):
     try:
+        trans = paramiko.Transport((host, port))
+        trans.connect(username=user, password=password)
+        sftp = paramiko.SFTPClient.from_transport(trans)
+        sftp.put('/root/.ssh/id_rsa.pub', '/tmp/id_rsa.pub')
+        sftp.close()
+
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(hostname=host, port=port, username=user, password=password, timeout=5)
-        ssh.exec_command('')
+        ssh.exec_command('cat /tmp/id_rsa.pub >> /root/.ssh/authorized_keys ; rm -f /tmp/id_rsa.pub')
     except Exception as e:
         return e
+
 
 # 主机GET/POST
 def host(request):
@@ -113,18 +121,10 @@ def host(request):
             user = request.POST.get('user')
             password = request.POST.get('password')
             try:
-                add_pubkey(host, port, user, password)
-                get_hostinfo(host, port, user, password)
+                add_pubkey(host, password)
+                get_hostinfo(host)
             except Exception as e:
                 return e
-
-
-
-
-
-
-
-
 
 
 @csrf_exempt
