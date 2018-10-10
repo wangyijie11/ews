@@ -17,8 +17,8 @@ import time
 def hostlist(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
-        ews_username = request.session.get('ews_username')
-        return render(request, 'hosts/hostlist.html', {'ews_username': ews_username})
+        ews_account = request.session.get('ews_account')
+        return render(request, 'hosts/hostlist.html', {'ews_account': ews_account})
     else:
         return redirect('/login/')
 
@@ -26,8 +26,8 @@ def hostlist(request):
 def firewall(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
-        ews_username = request.session.get('ews_username')
-        return render(request, 'hosts/firewall.html', {'ews_username': ews_username})
+        ews_account = request.session.get('ews_account')
+        return render(request, 'hosts/firewall.html', {'ews_account': ews_account})
     else:
         return redirect('/login/')
 
@@ -35,8 +35,8 @@ def firewall(request):
 def imagelist(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
-        ews_username = request.session.get('ews_username')
-        return render(request, 'hosts/imagelist.html', {'ews_username': ews_username})
+        ews_account = request.session.get('ews_account')
+        return render(request, 'hosts/imagelist.html', {'ews_account': ews_account})
     else:
         return redirect('/login/')
 
@@ -44,8 +44,8 @@ def imagelist(request):
 def containerlist(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
-        ews_username = request.session.get('ews_username')
-        return render(request, 'hosts/containerlist.html', {'ews_username': ews_username})
+        ews_account = request.session.get('ews_account')
+        return render(request, 'hosts/containerlist.html', {'ews_account': ews_account})
     else:
         return redirect('/login/')
 

@@ -15,10 +15,12 @@
         <!-- 头部区域（可配合layui已有的水平导航） -->
         <ul class="layui-nav layui-layout-right">
             <li class="layui-nav-item">
-                <a>
-{#                    <img src="http://t.cn/RCzsdCq" class="layui-nav-img">#}
-                    {{ ews_username }}
-                </a>
+                <a name="default_group" id="default_group">系统运维</a>
+                <dl class="layui-nav-child" name="other_group">
+                </dl>
+            </li>
+            <li class="layui-nav-item">
+                <a>{{ ews_account }}</a>
                 <dl class="layui-nav-child">
                     <dd><a href="">基本资料</a></dd>
                     <dd><a href="">安全设置</a></dd>
