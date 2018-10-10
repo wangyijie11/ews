@@ -6,7 +6,7 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
-from users.models import EwsUser, EwsGroup
+from django.contrib.auth.models import User, Group
 
 
 class EwsHost(models.Model):
@@ -21,8 +21,8 @@ class EwsHost(models.Model):
     os = models.CharField(max_length=255, blank=True, null=True)
     created_time = models.DateTimeField(blank=True, null=True)
     host_json = models.CharField(max_length=255, blank=True, null=True)
-    tab_user = models.ForeignKey(EwsUser, on_delete=models.CASCADE)
-    tab_group = models.ForeignKey(EwsGroup, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.ip

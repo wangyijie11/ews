@@ -120,7 +120,7 @@ def host(request):
         if request.method == 'POST':
             host = request.POST.get('host')
             # port = request.POST.get('port')
-            user = request.POST.get('user')
+            # user = request.POST.get('user')
             password = request.POST.get('password')
             try:
                 if not add_pubkey(host, password):

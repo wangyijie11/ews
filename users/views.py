@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-from users.models import EwsUser, EwsGroup, EwsUserGroup
 from django.contrib import auth
 from django.contrib.auth.models import User, Group
 import json
