@@ -55,3 +55,19 @@ def userlist(request):
 def grouplist(request):
     pass
     return render(request, 'users/grouplist.html', locals())
+
+
+# 获取登录用户所在的所有用户组
+def get_usergroup(request):
+    ews_accountid = request.session.get('ews_accountid')
+    user = User.objects.get(pk=ews_accountid)
+    groups = user.groups.all()
+    result = {}
+    dict = []
+    for g in groups:
+        dic = {}
+        dic['groupid'] = g.id
+        dic['groupname'] = g.name
+        dict.append(dic)
+    result['groups'] = dict
+    return render(request, 'nav.html', result)
