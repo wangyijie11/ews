@@ -15,12 +15,12 @@
         <!-- 头部区域（可配合layui已有的水平导航） -->
         <ul class="layui-nav layui-layout-right">
             <li class="layui-nav-item">
-                <select class="layui-nav-child" name="groupId" id="groupSelect">
-
-                </select>
+                <a href="javascript:;">
+                    {{ ews_account }}
+                </a>
             </li>
             <li class="layui-nav-item">
-                <a href="javascript:;">
+                <a href="javascript:;" id="groupSelect">
                     {{ ews_account }}
                 </a>
                 <dl class="layui-nav-child layui-anim layui-anim-upbit">
@@ -103,14 +103,6 @@
             form = layui.form,
             element = layui.element;
 
-        $.get('{% url 'users:get_usergroup' %}', function (data) {
-            var groups = data.groups;
-            var groupSelect = $('#groupSelect');
-            $.each(groups, function (index, groups) {
-                var groupOption = $("<option value='"+groups.groupid+"'>"+groups.groupname+"</option>");
-                groupSelect.append(groupOption);
-            })
-        })
     });
 </script>
 {% block script %}{% endblock %}
