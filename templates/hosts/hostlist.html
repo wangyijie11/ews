@@ -5,26 +5,6 @@
 {% endblock %}
 
 {% block content %}
- {% comment %}   <div class="layui-row" id="selectgroup" style="display: none">
-        <div class="layui-col-md12">
-            <form class="layui-form">
-                {% csrf_token %}
-                <br>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">用户组</label>
-                    <div class="layui-input-block">
-                        <select class="layui-input" name="group" lay-filter="groupselect">
-                        </select>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <div class="layui-input-block">
-                        <button type="button" class="layui-btn layui-btn-normal" lay-filter="groupcommit">确认</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>{% endcomment %}
     <div class="layui-row" id="addhost" style="display:none;">
         <div class="layui-col-md12">
             <form class="layui-form">
@@ -160,10 +140,10 @@
                     case 'update':
                         layer.msg('编辑');
                         break;
-                };
+                }
             });
 
-            // 添加主机提交表单，添加成功后打开弹出层分配组
+            // 添加主机提交表单
             form.on('submit(hostcommit)',function (data) {
                 $.post({
                     url: '{% url 'hosts:host' %}',
@@ -172,13 +152,6 @@
                         data = JSON.parse(data);
                         if (data["status"] == 0){
                             layer.msg('添加成功');
-                            {% comment %}layer.open({
-                                type: 1,
-                                title: "分配组",
-                                area: ['500px', '350px'],
-                                content: $('#selectgroup').html()
-                            }){% endcomment %}
-
                         }else if (data["status"] == 1){
                             layer.msg('添加公钥失败');
                         }else if (data["status"] == 2){
@@ -187,27 +160,11 @@
                             layer.msg('添加主机过程遇未知错误');
                         }
                     }
-                })
+                });
                 return false;
-            })
+            });
 
-            // 分配组表单提交
-{% comment %}            form.on('submit(groupcommit)', function (data) {
-              $.post({
-                  url: '{% url 'hosts:post_hostgroup' %}',
-                  data: data.field,
-                  success:function (data) {
-                      data = JSON.parse(data);
-                      if (data["status"] == 0){
-                          layer.msg('分配组完成');
-                      }else {
-                          layer.msg('分配组失败');
-                      }
-                  }
-              })
-            })
-;{% endcomment %}
-        })
+        });
     </script>
 
 {% endblock %}

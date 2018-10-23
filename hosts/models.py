@@ -21,8 +21,8 @@ class EwsHost(models.Model):
     os = models.CharField(max_length=255, blank=True, null=True)
     created_time = models.DateTimeField(blank=True, null=True)
     host_json = models.CharField(max_length=255, blank=True, null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    tab_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    tab_group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.ip
