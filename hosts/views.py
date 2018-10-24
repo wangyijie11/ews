@@ -89,47 +89,32 @@ def get_hostlist(request):
 
 
 # 获取主机信息
-def get_hostinfo(host):
-    session = Centos7(host)  # 类Centos7的connect方法需要改成ssh连接
+def get_hostinfo(host, port, user, password):
+    session = Centos7(host, port, user, password)  # 类Centos7的connect方法需要改成ssh连接
     hostname = session.get_hostname()
     cpuinfo = session.get_cpuinfo()
     memory = session.get_memory()
-    version = session.get_memory()
+    version = session.get_version()
     disk = session.get_disk()
     data = {'hostname': hostname, 'cpuinfo': cpuinfo, 'memory': memory, 'version': version, 'disk': disk}
     return data
 
 
-# 添加公钥
-def add_pubkey(host, password, port=22, user='root'):
-    try:
-        trans = paramiko.Transport((host, port))
-        trans.connect(username=user, password=password)
-        sftp = paramiko.SFTPClient.from_transport(trans)
-        sftp.put('/root/.ssh/id_rsa.pub', '/tmp/id_rsa.pub')
-        sftp.close()
-
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname=host, port=port, username=user, password=password, timeout=5)
-        ssh.exec_command('cat /tmp/id_rsa.pub >> /root/.ssh/authorized_keys ; rm -f /tmp/id_rsa.pub')
-        return True
-    except Exception as ex:
-        return False
-
 # 主机GET/POST
 def host(request):
     if request.session.get('is_login', None):
         ews_accountid = request.session.get('ews_accountid')
+        ews_groupid = request.session.get('ews_groupid')
         if request.method == 'POST':
             host = request.POST.get('host')
-            # port = request.POST.get('port')
-            # user = request.POST.get('user')
+            port = request.POST.get('port')
+            user = request.POST.get('user')
             password = request.POST.get('password')
             try:
-                if not add_pubkey(host, password):
-                    return HttpResponse(json.dumps({"status": 1}))
-                data = get_hostinfo(host)
+                # 添加公钥
+                # if not add_pubkey(host, port, user, password):
+                #     return HttpResponse(json.dumps({"status": 1}))
+                data = get_hostinfo(host, port, user, password)
                 if data:
                     new_host = models.EwsHost()
                     new_host.ip = host
@@ -140,13 +125,16 @@ def host(request):
                     new_host.cpu_cores = data['cpuinfo']
                     new_host.created_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
                     new_host.tab_user_id = ews_accountid
+                    new_host.tab_group_id = ews_groupid
+                    new_host.ssh_port = int(port)
+                    new_host.ssh_user = user
+                    new_host.ssh_password = password
                     new_host.save()
                     return HttpResponse(json.dumps({"status": 0}))
                 else:
                     return HttpResponse(json.dumps({"status": 2}))
             except Exception as ex:
                 return HttpResponse(json.dumps({"status": 3}))
-
 
 
 # 获取镜像列表

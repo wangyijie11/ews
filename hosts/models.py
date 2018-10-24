@@ -10,7 +10,7 @@ from django.contrib.auth.models import User, Group
 
 
 class EwsHost(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     ip = models.CharField(max_length=255, blank=True, null=True)
     hostname = models.CharField(max_length=255, blank=True, null=True)
     description = models.CharField(max_length=255, blank=True, null=True)
@@ -20,6 +20,9 @@ class EwsHost(models.Model):
     docker_version = models.CharField(max_length=255, blank=True, null=True)
     os = models.CharField(max_length=255, blank=True, null=True)
     created_time = models.DateTimeField(blank=True, null=True)
+    ssh_port = models.IntegerField(blank=True, null=True)
+    ssh_user = models.CharField(max_length=255, blank=True, null=True)
+    ssh_password = models.CharField(blank=True, max_length=255, null=True)
     host_json = models.CharField(max_length=255, blank=True, null=True)
     tab_user = models.ForeignKey(User, on_delete=models.CASCADE)
     tab_group = models.ForeignKey(Group, on_delete=models.CASCADE)

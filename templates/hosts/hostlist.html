@@ -13,37 +13,60 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">IP：</label>
                     <div class="layui-input-inline">
-                        <input type="text" name="host" class="layui-input" lay-filter="required">
+                        <input type="text" name="host" class="layui-input" lay-verify="required" placeholder="请输入IP地址">
                     </div>
                 </div>
-               {% comment %}
+
                 <div class="layui-form-item">
                     <label class="layui-form-label">端口：</label>
                     <div class="layui-input-inline">
-                        <input type="text" name="port" class="layui-input" lay-filter="required">
+                        <input type="text" name="port" class="layui-input" lay-verify="required" placeholder="请输入SSH访问端口">
                     </div>
                 </div>
-                {% endcomment %}
+
                 <div class="layui-form-item">
                     <label class="layui-form-label">账号：</label>
                     <div class="layui-input-inline">
-                        <input type="text" name="user" class="layui-input" lay-filter="required">
+                        <input type="text" name="user" class="layui-input" lay-verify="required" placeholder="请输入访问账号">
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label">密码：</label>
                     <div class="layui-input-inline">
-                        <input type="password" name="password" class="layui-input" lay-filter="required">
+                        <input type="password" name="password" class="layui-input" lay-verify="required" placeholder="请输入密码">
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <div class="layui-input-block">
                         <button type="reset" class="layui-btn layui-btn-primary">重置</button>
-                        <button type="button" class="layui-btn layui-btn-normal" lay-filter="hostcommit">确认</button>
+                        <button lay-submit class="layui-btn layui-btn-normal" lay-filter="hostcommit">确认</button>
                     </div>
                 </div>
             </form>
         </div>
+    </div>
+
+    <!-- 主机备注编辑表单 -->
+    <div class="layui-row" id="editdesc" style="display:none;">
+        <div class="layui-col-md12">
+            <form class="layui-form">
+                {% csrf_token %}
+                <br>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">主机备注：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="host" class="layui-input" lay-verify="required" placeholder="请输入中英文备注信息">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                        <button lay-submit class="layui-btn layui-btn-normal" lay-filter="desccommit">确认</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
     </div>
 
     <table id="hostlist" lay-filter="tableDemo"></table>
@@ -51,6 +74,7 @@
 {% endblock %}
 
 {% block script %}
+    //数据行操作按钮
     <script type="text/html" id="barDemo">
         <a class="layui-btn layui-btn-xs" lay-event="container">容器</a>
         <a class="layui-btn layui-btn-xs" lay-event="image">镜像</a>
@@ -58,6 +82,7 @@
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </script>
 
+    //批量操作按钮
     <script type="text/html" id="toolbarDemo">
         <div class="layui-btn-container">
             <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
@@ -114,11 +139,15 @@
                     });
                 } else if (layEvent === 'edit') { //编辑
                     //do something
-
+                    layer.open({
+                        type: 1,
+                        title: "编辑主机备注",
+                        area: ['500px', '350px'],
+                        content:$('#editdesc').html()
+                    })
                     //同步更新缓存对应的值
                     obj.update({
                         username: '123'
-                        , title: 'xxx'
                     });
                 }
             });
@@ -130,7 +159,7 @@
                         layer.open({
                             type: 1,
                             title: "添加主机",
-                            area: ['360px', '280px'],
+                            area: ['500px', '350px'],
                             content: $('#addhost').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
                         });
                         break;
@@ -152,6 +181,8 @@
                         data = JSON.parse(data);
                         if (data["status"] == 0){
                             layer.msg('添加成功');
+                            layer.close(layui.index);
+                            location.reload();
                         }else if (data["status"] == 1){
                             layer.msg('添加公钥失败');
                         }else if (data["status"] == 2){
