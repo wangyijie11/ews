@@ -11,6 +11,7 @@ import docker
 from hosts.hostmgr import Centos7
 import paramiko
 import time
+from django.http import QueryDict
 
 
 # Create your views here.
@@ -88,7 +89,7 @@ def get_hostlist(request):
     return JsonResponse(resultdict, safe=False)
 
 
-# 获取主机信息
+# 远程获取主机信息
 def get_hostinfo(host, port, user, password):
     session = Centos7(host, port, user, password)  # 类Centos7的connect方法需要改成ssh连接
     hostname = session.get_hostname()
@@ -100,7 +101,8 @@ def get_hostinfo(host, port, user, password):
     return data
 
 
-# 主机GET/POST
+# 主机GET/POST，添加主机、删除主机、获取主机信息
+@csrf_exempt
 def host(request):
     if request.session.get('is_login', None):
         ews_accountid = request.session.get('ews_accountid')
@@ -135,6 +137,33 @@ def host(request):
                     return HttpResponse(json.dumps({"status": 2}))
             except Exception as ex:
                 return HttpResponse(json.dumps({"status": 3}))
+
+        if request.method == 'DELETE':
+            id = QueryDict(request.body).get('id')
+            try:
+                if any(id):
+                    EwsHost.objects.filter(pk=id).delete()
+                    return HttpResponse(json.dumps({"status": 0}))
+                else:
+                    return HttpResponse(json.dumps({"status": 1}))
+            except Exception as ex:
+                return HttpResponse(json.dumps({"status": 2}))
+
+
+# 更新主机备注信息
+@csrf_exempt
+def post_desc(request):
+    if request.session.get('is_login', None):
+        if request.method == 'POST':
+            ews_accountid = request.session.get('ews_accountid')
+            ews_groupid = request.session.get('ews_groupid')
+            desc = request.POST.get('desc')
+            id = request.POST.get('id')
+            try:
+                if EwsHost.objects.filter(pk=id).update(description=desc):
+                    return HttpResponse(json.dumps({"status": 0}))
+            except Exception as ex:
+                return HttpResponse(json.dumps({"status": 1}))
 
 
 # 获取镜像列表

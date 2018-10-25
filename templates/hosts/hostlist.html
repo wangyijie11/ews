@@ -55,7 +55,7 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">主机备注：</label>
                     <div class="layui-input-inline">
-                        <input type="text" name="host" class="layui-input" lay-verify="required" placeholder="请输入中英文备注信息">
+                        <input type="text" id='host_desc' name="desc" class="layui-input" lay-verify="required" placeholder="请输入中英文备注信息">
                     </div>
                 </div>
                 <div class="layui-form-item">
@@ -76,6 +76,7 @@
 {% block script %}
     //数据行操作按钮
     <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-xs" lay-event="docker">docker</a>
         <a class="layui-btn layui-btn-xs" lay-event="container">容器</a>
         <a class="layui-btn layui-btn-xs" lay-event="image">镜像</a>
         <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
@@ -133,21 +134,71 @@
                     window.location.href = "{% url 'hosts:imagelist' %}?id=" + data.id
                 } else if (layEvent === 'del') { //删除
                     layer.confirm('确认删除？', function (index) {
+                        id = data['id']
                         obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
-                        layer.close(index);
                         //向服务端发送删除指令
+                        $.ajax({
+                            url: '{% url 'hosts:host' %}',
+                            type: "delete",
+                            data: {"id": id},
+                            success: function (data) {
+                                data = JSON.parse(data);
+                                if (data["status"] == 0) {
+                                    layer.closeAll();
+                                    layer.msg('删除成功');
+                                } else if (data["status"] == 1) {
+                                    layer.msg('删除失败');
+                                } else if (data["status"] == 2) {
+                                    layer.msg('获取ID失败');
+                                } else {
+                                    layer.msg('运行异常');
+                                }
+                            }
+                        });
                     });
-                } else if (layEvent === 'edit') { //编辑
-                    //do something
+                } else if (layEvent === 'edit') {
+                    // 编辑备注
+                    var host_id = data.id;
                     layer.open({
                         type: 1,
                         title: "编辑主机备注",
-                        area: ['500px', '350px'],
-                        content:$('#editdesc').html()
-                    })
-                    //同步更新缓存对应的值
-                    obj.update({
-                        username: '123'
+                        area: ['350px', '200px'],
+                        content:$('#editdesc').html(),
+                        success: function (layero, index) {
+
+                        }
+                    });
+                    // 编辑主机备注提交表单
+                    form.on('submit(desccommit)', function (data) {
+                        data = data.field;
+                        data['id'] = host_id;
+                        $.post({
+                            url: '{% url 'hosts:post_desc' %}',
+                            data: data,
+                            success: function (data) {
+                                data = JSON.parse(data);
+                                if (data["status"] == 0) {
+                                    layer.closeAll();
+                                    layer.msg('保存成功');
+
+                                } else if (data["status"] == 1) {
+                                    layer.msg('保存失败');
+                                } else {
+                                    layer.msg('运行异常');
+                                }
+                            }
+                        });
+                        //同步更新缓存对应的值
+                        obj.data.update({
+                            description: data['desc']
+                        });
+                    });
+
+
+                } else if (layEvent === 'docker') {
+                    layer.confirm('确认安装docker？', function (index) {
+                        layer.close(index);
+                        //向服务端发送删除指令
                     });
                 }
             });
@@ -159,7 +210,7 @@
                         layer.open({
                             type: 1,
                             title: "添加主机",
-                            area: ['500px', '350px'],
+                            area: ['350px', '350px'],
                             content: $('#addhost').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
                         });
                         break;
@@ -195,7 +246,8 @@
                 return false;
             });
 
-        });
+
+        }); //layui.use
     </script>
 
 {% endblock %}
