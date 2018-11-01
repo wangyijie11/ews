@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'hosts',
     'users',
+    'repository',
 ]
 
 MIDDLEWARE = [
@@ -140,3 +141,6 @@ STATICFILES_DIRS = [
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE =False
 SESSION_COOKIE_AGE = 1209600
+
+
+MEDIA_ROOT = '/data/resource/'

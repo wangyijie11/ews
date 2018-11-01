@@ -13,19 +13,12 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path
-from django.conf.urls import include
-from django.conf.urls import url
-from users import views
 
+from django.conf.urls import url
+from repository import views
+
+app_name = 'repository'
 urlpatterns = [
-    url(r'^dashboard/', views.dashboard, name='dashboard'),
-    url(r'^login/', views.login, name='login'),
-    url(r'^logout/', views.logout, name='logout'),
-    url(r'^$', views.dashboard, name="index"),
-    path('admin/', admin.site.urls),
-    path('hosts/', include('hosts.urls')),
-    path('users/', include('users.urls')),
-    path('repository/', include('repository.urls'))
+    url(r'^repositoryPub/', views.repository_pub, name='repositoryPub'),
+    url(r'^get_repositorypublist/', views.get_repositorypublist, name='get_repositorypublist'),
 ]

@@ -27,6 +27,5 @@ urlpatterns = [
     url(r'^get_imagelist/', views.get_imagelist, name='get_imagelist'),
     url(r'^get_containerlist/', views.get_containerlist, name='get_contaienrlist'),
     url(r'^host/', views.host, name='host'),
-    url(r'^delete_host/', views.delete_host, name='delete_host'),
     url(r'^post_desc/', views.post_desc, name='post_desc'),
 ]

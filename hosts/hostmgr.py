@@ -92,6 +92,7 @@ class Centos7(object):
         return disk
 
 
+# 测试
 def test(host):
     session = Centos7(host)  # 类Centos7的connect方法需要改成ssh连接
     hostname = session.get_hostname()
