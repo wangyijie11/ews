@@ -31,24 +31,6 @@
                 $ = layui.jquery,
                 laypage = layui.laypage;
 
-            //不显示首页尾页
-            {#laypage.render({#}
-            {#    elem: 'imagelist',#}
-            {#    page: true,#}
-            {#    limit: 12,#}
-            {#    first: false,#}
-            {#    last: false,#}
-            {#    jump: function(obj, first) {#}
-            {#        //obj包含了当前分页的所有参数，比如：#}
-            {#        console.log(obj.curr); //得到当前页，以便向服务端请求对应页的数据。#}
-            {#        console.log(obj.limit); //得到每页显示的条数#}
-            {##}
-            {#        //首次不执行#}
-            {#        if (!first) {#}
-            {#            //do something#}
-            {#        }#}
-            {#    }#}
-            {#})#}
         });
     </script>
     <script type="text/javascript">
@@ -63,7 +45,7 @@
                             images = result.data,
                             imageDiv = $('#imagelist');
                         $.each(images, function (index, data) {
-                            var imageOption = $("<div class='layui-col-md3'><div class='layui-card'><div class='layui-card-header'>" +
+                            var imageOption = $("<div class='layui-col-md3' onclick='toImageTags(this)'><div class='layui-card'><div class='layui-card-header'>" +
                                 data.repository + "</div><div class='layui-card-body' style='height:185px; overflow: hidden; text-overflow: ellipsis;'>" +
                                 data.desc + "</div></div></div>")
                             imageDiv.append(imageOption)
@@ -75,5 +57,10 @@
                 }
             })
         })
+    </script>
+    <script type="text/javascript">
+        function toImageTags(obj) {
+            window.location.href='{% url 'repository:imageTagsPub' %}?reposiotry=' + obj.id + '&registry=1';
+        }
     </script>
 {% endblock %}

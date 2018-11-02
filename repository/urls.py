@@ -21,4 +21,6 @@ app_name = 'repository'
 urlpatterns = [
     url(r'^repositoryPub/', views.repository_pub, name='repositoryPub'),
     url(r'^get_repositorypublist/', views.get_repositorypublist, name='get_repositorypublist'),
+    url(r'^imageTagsPub/', views.get_imageTags, name='imageTagsPub'),
+
 ]
