@@ -52,10 +52,15 @@ def dashboard(request):
         return redirect('/login/')
 
 
-# 用户列表
+# 用户列表我的团队
 def userlist(request):
-    pass
-    return render(request, 'users/userlist.html', locals())
+    is_login = request.session.get('is_login', False)
+    if is_login:
+        ews_username = request.session.get('ews_account')
+        ews_groupname = request.session.get('ews_groupname')
+        return render(request, 'users/userlist.html', {'ews_account': ews_username, 'ews_groupname': ews_groupname})
+    else:
+        return redirect('/login/')
 
 
 # 用户组列表
@@ -78,3 +83,30 @@ def get_usergroup(request):
     groupdict['data'] = grouplist
     groupdict['total'] = groups.count()
     return JsonResponse(groupdict, safe=False)
+
+
+# 获取用户组内成员信息
+@csrf_exempt
+def get_userlist(request):
+    ews_accountid = request.session.get('ews_accountid')
+    ews_groupid = request.session.get('ews_groupid')
+    page = request.GET.get('page')
+    rows = request.GET.get('limit')
+    i = (int(page) - 1) * int(rows)
+    j = (int(page) - 1) * int(rows) + int(rows)
+    users = Group.objects.get(pk=ews_groupid).user_set.all()
+    total = users.count()
+    users = users[i:j]
+    resultdict = {}
+    dict = []
+    for u in users:
+        dic = {}
+        dic['id'] = u.id
+        dic['username'] = u.username
+        dic['name'] = u.last_name + u.first_name
+        dict.append(dic)
+    resultdict['data'] = dict
+    resultdict['count'] = total
+    resultdict['code'] = 0
+    resultdict['msg'] = ""
+    return JsonResponse(resultdict, safe=False)

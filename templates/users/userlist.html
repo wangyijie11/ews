@@ -5,9 +5,114 @@
 {% endblock %}
 
 {% block content %}
-    userlist
+
+    <table id="userlist" lay-filter="tableDemo"></table>
+
 {% endblock %}
 
 {% block script%}
+     //数据行操作按钮
+    <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-xs" lay-event="info">信息</a>
+        <a class="layui-btn layui-btn-xs" lay-event="password">权限</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+    //批量操作按钮
+    <script type="text/html" id="toolbarDemo">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+            <button class="layui-btn layui-btn-sm" lay-event="delete">删除</button>
+        </div>
+    </script>
+
+
+
+    <script>
+        layui.use(['table', 'jquery', 'layer', 'form'], function () {
+            var table = layui.table,
+                layer = layui.layer,
+                form = layui.form,
+                $ = layui.jquery;
+
+            //表格渲染
+            table.render({
+                elem: '#userlist', //指定原始表格元素选择器（推荐id选择器）
+                url: '{% url 'users:get_userlist' %}',
+                method: 'get',
+                page: true, //分页
+                limit: 10,
+                skin: 'line', //行边框风格
+                even: true, //开启隔行背景
+                toolbar: '#toolbarDemo',
+                cols: [[
+                    {checkbox: true},
+                    {field: 'id', title: 'ID', width: '10%'},
+                    {field: 'username', title: 'IP', width: '30%'},
+                    {field: 'name', title: '状态', width: '30%'},
+                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '30%'},
+                ]],
+            });
+
+
+            //监听工具条,每行
+            table.on('tool(tableDemo)', function (obj) { //注：tool是工具条事件名，host是table原始容器的属性 lay-filter="对应的值"
+                var data = obj.data; //获得当前行数据
+                var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+                if (layEvent === 'info') { //跳转
+                    //跳转至容器列表
+                    window.location.href = "{% url '' %}?id=" + data.id
+                } else if (layEvent === 'password') {
+                    //跳转至镜像列表
+                    window.location.href = "{% url '' %}?id=" + data.id
+                } else if (layEvent === 'del') { //删除
+                    layer.confirm('确认删除？', function (index) {
+                        id = data['id']
+                        obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                        //向服务端发送删除指令
+                        $.ajax({
+                            url: '{% url '' %}',
+                            type: "delete",
+                            data: {"id": id},
+                            success: function (data) {
+                                data = JSON.parse(data);
+                                if (data["status"] == 0) {
+                                    layer.closeAll();
+                                    layer.msg('删除成功');
+                                } else if (data["status"] == 1) {
+                                    layer.msg('删除失败');
+                                } else if (data["status"] == 2) {
+                                    layer.msg('获取ID失败');
+                                } else {
+                                    layer.msg('运行异常');
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+            //监听工具栏事件,头部
+            table.on('toolbar(tableDemo)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                switch (obj.event) {
+                    case 'add':
+                        layer.open({
+                            type: 1,
+                            title: "组内增加用户",
+                            area: ['350px', '350px'],
+                            content: $('#adduser').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
+                        });
+                        break;
+                    case 'delete':
+                        layer.confirm();
+                        break;
+                    case 'update':
+                        layer.msg('编辑');
+                        break;
+                }
+            });
+
+        });
+    </script>
 
 {% endblock %}

@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^userlist/', views.userlist, name='userlist'),
     url(r'^grouplist/', views.grouplist, name='grouplist'),
     url(r'^get_usergroup/', views.get_usergroup, name='get_usergroup'),
+    url(r'^get_userlist/', views.get_userlist, name='get_userlist')
 
 
 ]
