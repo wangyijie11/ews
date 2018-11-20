@@ -15,13 +15,13 @@ Including another URLconf
 """
 
 from django.conf.urls import url
-from users import views
+from project import views
 
-app_name = 'users'
+app_name = 'project'
 urlpatterns = [
-    url(r'^userlist/', views.userlist, name='userlist'),
-    url(r'^grouplist/', views.grouplist, name='grouplist'),
-    url(r'^get_grouplist/', views.get_grouplist, name='get_grouplist'),
-    url(r'^get_userlist/', views.get_userlist, name='get_userlist'),
+    url(r'^projectlist/', views.projectlist, name='projectlist'),
+    url(r'^get_projectlist/', views.get_projectlist, name='get_projectlist'),
+
+
 
 ]

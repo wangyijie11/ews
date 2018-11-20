@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'hosts',
     'users',
     'repository',
+    'project',
 ]
 
 MIDDLEWARE = [

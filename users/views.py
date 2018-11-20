@@ -17,16 +17,12 @@ def login(request):
         password = request.POST.get('password', None)
         user = auth.authenticate(username=account, password=password)  # 验证用户名和密码，返回用户对象
         accountid = User.objects.get(username=account).id
-        groups = User.objects.get(pk=accountid).groups.all()
-        groupid = groups[0].id
-        groupname = groups[0].name
         if user:  # 如果用户对象存在
             auth.login(request, user)  # 用户登陆
             request.session['is_login'] = True
             request.session['ews_account'] = account
             request.session['ews_accountid'] = accountid
-            request.session['ews_groupid'] = groupid
-            request.session['ews_groupname'] = groupname
+
             request.session.set_expiry(6000)
             return HttpResponse(json.dumps({'status': 0}))
         else:
@@ -46,19 +42,17 @@ def dashboard(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
         ews_username = request.session.get('ews_account')
-        ews_groupname = request.session.get('ews_groupname')
-        return render(request, 'dashboard.html', {'ews_account': ews_username, 'ews_groupname': ews_groupname})
+        return render(request, 'dashboard.html', {'ews_account': ews_username})
     else:
         return redirect('/login/')
 
 
-# 用户列表我的团队
+# 返回用户列表
 def userlist(request):
     is_login = request.session.get('is_login', False)
     if is_login:
         ews_username = request.session.get('ews_account')
-        ews_groupname = request.session.get('ews_groupname')
-        return render(request, 'users/userlist.html', {'ews_account': ews_username, 'ews_groupname': ews_groupname})
+        return render(request, 'users/userlist.html', {'ews_account': ews_username})
     else:
         return redirect('/login/')
 
@@ -70,16 +64,18 @@ def grouplist(request):
 
 
 # 获取登录用户所在的所有用户组
-def get_usergroup(request):
+def get_grouplist(request):
     ews_accountid = request.session.get('ews_accountid')
     groups = User.objects.get(pk=ews_accountid).groups.all()
     groupdict = {}
     grouplist = []
     for g in groups:
         dic = {}
-        dic['group_id'] = g.id
-        dic['group_name'] = g.name
+        dic['id'] = g.id
+        dic['groupname'] = g.name
         grouplist.append(dic)
+    groupdict['code'] = 0
+    groupdict['msg'] = ""
     groupdict['data'] = grouplist
     groupdict['total'] = groups.count()
     return JsonResponse(groupdict, safe=False)
@@ -88,8 +84,7 @@ def get_usergroup(request):
 # 获取用户组内成员信息
 @csrf_exempt
 def get_userlist(request):
-    ews_accountid = request.session.get('ews_accountid')
-    ews_groupid = request.session.get('ews_groupid')
+    ews_groupid = request.GET.get('ews_groupid')
     page = request.GET.get('page')
     rows = request.GET.get('limit')
     i = (int(page) - 1) * int(rows)

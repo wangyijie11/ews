@@ -7,6 +7,7 @@ from . import models
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from hosts.models import EwsHost
+from django.contrib.auth.models import User, Group
 import docker
 from hosts.hostmgr import Centos7
 import paramiko
@@ -19,8 +20,7 @@ def hostlist(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
         ews_account = request.session.get('ews_account')
-        ews_groupname = request.session.get('ews_groupname')
-        return render(request, 'hosts/hostlist.html', {'ews_account': ews_account, 'ews_groupname': ews_groupname})
+        return render(request, 'hosts/hostlist.html', {'ews_account': ews_account})
     else:
         return redirect('/login/')
 
@@ -29,8 +29,7 @@ def firewall(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
         ews_account = request.session.get('ews_account')
-        ews_groupname = request.session.get('ews_groupname')
-        return render(request, 'hosts/firewall.html', {'ews_account': ews_account, 'ews_groupname': ews_groupname})
+        return render(request, 'hosts/firewall.html', {'ews_account': ews_account})
     else:
         return redirect('/login/')
 
@@ -39,8 +38,7 @@ def imagelist(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
         ews_account = request.session.get('ews_account')
-        ews_groupname = request.session.get('ews_groupname')
-        return render(request, 'hosts/imagelist.html', {'ews_account': ews_account, 'ews_groupname': ews_groupname})
+        return render(request, 'hosts/imagelist.html', {'ews_account': ews_account})
     else:
         return redirect('/login/')
 
@@ -49,8 +47,7 @@ def containerlist(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
         ews_account = request.session.get('ews_account')
-        ews_groupname = request.session.get('ews_groupname')
-        return render(request, 'hosts/containerlist.html', {'ews_account': ews_account, 'ews_groupname': ews_groupname})
+        return render(request, 'hosts/containerlist.html', {'ews_account': ews_account})
     else:
         return redirect('/login/')
 
@@ -81,6 +78,7 @@ def get_hostlist(request):
         dic['os'] = h.os
         dic['tab_user_id'] = h.tab_user_id
         dic['tab_group_id'] = h.tab_group_id
+        dic['tab_groupname'] = Group.objects.get(pk=h.tab_group_id).name
         dict.append(dic)
     resultdict['code'] = 0
     resultdict['msg'] = ""
@@ -106,12 +104,12 @@ def get_hostinfo(host, port, user, password):
 def host(request):
     if request.session.get('is_login', None):
         ews_accountid = request.session.get('ews_accountid')
-        ews_groupid = request.session.get('ews_groupid')
         if request.method == 'POST':
             host = request.POST.get('host')
             port = request.POST.get('port')
             user = request.POST.get('user')
             password = request.POST.get('password')
+            ews_groupid = request.POST.get('ews_groupid')
             try:
                 # 添加公钥
                 # if not add_pubkey(host, port, user, password):
@@ -155,8 +153,6 @@ def host(request):
 def post_desc(request):
     if request.session.get('is_login', None):
         if request.method == 'POST':
-            ews_accountid = request.session.get('ews_accountid')
-            ews_groupid = request.session.get('ews_groupid')
             desc = request.POST.get('desc')
             id = request.POST.get('id')
             try:

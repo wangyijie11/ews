@@ -27,5 +27,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('hosts/', include('hosts.urls')),
     path('users/', include('users.urls')),
-    path('repository/', include('repository.urls'))
+    path('repository/', include('repository.urls')),
+    path('project/', include('project.urls')),
 ]
