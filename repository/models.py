@@ -35,7 +35,6 @@ class EwsRepository(models.Model):
     created_time = models.DateTimeField(blank=True, null=True)
     readme = models.FileField(upload_to='md/repositorypub/')
     image = models.ImageField(upload_to='img/repositorypub/')
-    tab_user = models.ForeignKey(User, on_delete=models.CASCADE)
     tab_group = models.ForeignKey(Group, on_delete=models.CASCADE)
     repository_json = models.CharField(max_length=255, blank=True, null=True)
 

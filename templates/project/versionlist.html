@@ -97,7 +97,7 @@
                 var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
                 if (layEvent === 'version') { //跳转
                     id = data['projectid'];
-                    window.location.href = '{% url 'project:version' %}?project=' + id;
+                    window.location.href = '{% url 'project:versionlist' %}?project=' + id;
                 } else if (layEvent === 'repo') {
 
                 } else if (layEvent === 'del') { //删除

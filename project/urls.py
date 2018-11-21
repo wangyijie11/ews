@@ -21,6 +21,9 @@ app_name = 'project'
 urlpatterns = [
     url(r'^projectlist/', views.projectlist, name='projectlist'),
     url(r'^get_projectlist/', views.get_projectlist, name='get_projectlist'),
+    url(r'^project/', views.project, name='project'),
+    url(r'^versionlist/', views.versionlist, name='versionlist'),
+    url(r'^version/', views.version, name='version'),
 
 
 

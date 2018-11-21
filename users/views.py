@@ -59,8 +59,12 @@ def userlist(request):
 
 # 用户组列表
 def grouplist(request):
-    pass
-    return render(request, 'users/grouplist.html', locals())
+    is_login = request.session.get('is_login', False)
+    if is_login:
+        ews_username = request.session.get('ews_account')
+        return render(request, 'users/grouplist.html', {'ews_account': ews_username})
+    else:
+        return redirect('/login/')
 
 
 # 获取登录用户所在的所有用户组
