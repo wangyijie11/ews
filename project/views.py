@@ -36,36 +36,6 @@ def versionlist(request):
         return redirect('/login/')
 
 
-# 获取用户所在所有组的项目
-def get_projectlist(request):
-    ews_accountid = request.session.get('ews_accountid')
-    groups = User.objects.get(pk=ews_accountid).groups.all()
-    page = request.GET.get('page')
-    rows = request.GET.get('limit')
-    i = (int(page) - 1) * int(rows)
-    j = (int(page) - 1) * int(rows) + int(rows)
-    result = {}
-    dict = []
-    num = 0
-    for g in groups:
-        projects = Group.objects.get(pk=g.id).ewsproject_set.all()
-        for p in projects:
-            num = num + 1
-            dic = {}
-            dic['groupid'] = g.id
-            dic['groupname'] = g.name
-            dic['projectid'] = p.id
-            dic['projectname'] = p.projectname
-            dic['repository'] = p.repository
-            dic['created_time'] = p.created_time
-            dict.append(dic)
-    result['code'] = 0
-    result['msg'] = ""
-    result['count'] = num
-    result['data'] = dict
-    return JsonResponse(result, safe=False)
-
-
 # 项目POST/GET/DELETE，添加、删除、获取项目
 @csrf_exempt
 def project(request):
@@ -115,15 +85,87 @@ def project(request):
             except Exception as ex:
                 return HttpResponse(json.dumps({"status": 2}))
 
+        if request.method == 'GET':
+            ews_accountid = request.session.get('ews_accountid')
+            groups = User.objects.get(pk=ews_accountid).groups.all()
+            page = request.GET.get('page')
+            rows = request.GET.get('limit')
+            i = (int(page) - 1) * int(rows)
+            j = (int(page) - 1) * int(rows) + int(rows)
+            result = {}
+            dict = []
+            num = 0
+            for g in groups:
+                projects = Group.objects.get(pk=g.id).ewsproject_set.all()
+                for p in projects:
+                    num = num + 1
+                    dic = {}
+                    dic['groupid'] = g.id
+                    dic['groupname'] = g.name
+                    dic['projectid'] = p.id
+                    dic['projectname'] = p.projectname
+                    dic['repository'] = p.repository
+                    dic['created_time'] = p.created_time
+                    dict.append(dic)
+            result['code'] = 0
+            result['msg'] = ""
+            result['count'] = num
+            result['data'] = dict
+            return JsonResponse(result, safe=False)
 
-# 获取项目的版本
+
+# 版本GET/POST/DELETE
+@csrf_exempt
 def version(request):
     if request.session.get('is_login', None):
         if request.method == 'POST':
-            pass
+            version = request.POST.get('version')
+            projectid = request.POST.get('projectid')
+            try:
+                if version and projectid:
+                    versions_existed = EwsProject.objects.get(pk=projectid).ewsprojectversion_set.all()
+                    if version in versions_existed:
+                        return HttpResponse(json.dumps({"status": 1}))
+                    new_version = models.EwsProjectVersion()
+                    new_version.version = version
+                    new_version.created_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                    new_version.tab_project_id = projectid
+                    new_version.save()
+                    return HttpResponse(json.dumps({"status": 0}))
+            except Exception as ex:
+                return HttpResponse(json.dumps({"status": 2}))
+
         if request.method == 'GET':
-            pass
+            projectid = request.GET.get('projectid')
+            versions = EwsProject.objects.get(pk=projectid).ewsprojectversion_set.all()
+            page = request.GET.get('page')
+            rows = request.GET.get('limit')
+            i = (int(page) - 1) * int(rows)
+            j = (int(page) - 1) * int(rows) + int(rows)
+            total = versions.count()
+            versions = versions[i:j]
+            result = {}
+            dict = []
+            for v in versions:
+                dic = {}
+                dic['id'] = v.id
+                dic['version'] = v.version
+                dic['projectname'] = EwsProject.objects.get(pk=projectid).projectname
+                dic['created_time'] = v.created_time
+                dict.append(dic)
+            result['code'] = 0
+            result['msg'] = ""
+            result['count'] = total
+            result['data'] = dict
+            return JsonResponse(result, safe=False)
+
         if request.method == 'DELETE':
-            pass
-    result = {}
-    return JsonResponse(result, safe=False)
+            id = QueryDict(request.body).get('id')
+            try:
+                if any(id):
+                    EwsProjectVersion.objects.filter(pk=id).delete()
+                    return HttpResponse(json.dumps({"status": 0}))
+                else:
+                    return HttpResponse(json.dumps({"status": 1}))
+            except Exception as ex:
+                return HttpResponse(json.dumps({"status": 2}))

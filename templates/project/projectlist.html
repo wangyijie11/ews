@@ -73,7 +73,7 @@
             //表格渲染
             table.render({
                 elem: '#projectlist', //指定原始表格元素选择器（推荐id选择器）
-                url: '{% url 'project:get_projectlist' %}',
+                url: '{% url 'project:project' %}',
                 method: 'get',
                 page: true, //分页
                 limit: 10,
@@ -97,7 +97,7 @@
                 var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
                 if (layEvent === 'version') { //跳转
                     id = data['projectid'];
-                    window.location.href = '{% url 'project:version' %}?project=' + id;
+                    window.location.href = '{% url 'project:versionlist' %}?projectid=' + id;
                 } else if (layEvent === 'repo') {
 
                 } else if (layEvent === 'del') { //删除
@@ -115,11 +115,11 @@
                                     layer.closeAll();
                                     layer.msg('删除成功');
                                 } else if (data["status"] == 1) {
-                                    layer.msg('删除失败');
-                                } else if (data["status"] == 2) {
                                     layer.msg('获取ID失败');
+                                } else if (data["status"] == 2) {
+                                    layer.msg('请求异常');
                                 } else {
-                                    layer.msg('运行异常');
+                                    layer.msg('请求异常');
                                 }
                             }
                         });

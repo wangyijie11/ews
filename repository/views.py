@@ -7,17 +7,79 @@ from . import models
 from django.http import JsonResponse
 import time
 from repository.models import EwsRegistry, EwsRepository, EwsRepositoryPub
+from django.contrib.auth.models import User, Group
 
 
 # Create your views here.
-def repository_pub(request):
+# 返回公有仓库页面
+def repositorypublist(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
         ews_account = request.session.get('ews_account')
-        ews_groupname = request.session.get('ews_groupname')
-        return render(request, 'repository/repositoryPub.html', {'ews_account': ews_account, 'ews_groupname': ews_groupname})
+        return render(request, 'repository/repositoryPub.html', {'ews_account': ews_account})
     else:
         return redirect('/login/')
+
+
+# 返回项目仓库镜像标签页面
+def imagetagspublist(request):
+    is_login = request.session.get('is_login', False)  # 获取session里的值
+    if is_login:
+        ews_account = request.session.get('ews_account')
+        return render(request, 'repository/imageTagsPub.html', {'ews_account': ews_account})
+    else:
+        return redirect('/login/')
+
+
+# 返回项目仓库页面
+def repositorylist(request):
+    is_login = request.session.get('is_login', False)  # 获取session里的值
+    if is_login:
+        ews_account = request.session.get('ews_account')
+        return render(request, 'repository/repository.html', {'ews_account': ews_account})
+    else:
+        return redirect('/login/')
+
+
+# 返回项目仓库镜像标签页面
+def imagetagslist(request):
+    is_login = request.session.get('is_login', False)  # 获取session里的值
+    if is_login:
+        ews_account = request.session.get('ews_account')
+        return render(request, 'repository/imageTags.html', {'ews_account': ews_account})
+    else:
+        return redirect('/login/')
+
+
+# 项目仓库GET
+@csrf_exempt
+def repository(request):
+    if request.session.get('is_login', None):
+        if request.method == 'GET':
+            ews_accountid = request.session.get('ews_accountid')
+            groups = User.objects.get(pk=ews_accountid).groups.all()
+            page = request.GET.get('page')
+            rows = request.GET.get('limit')
+            i = (int(page) - 1) * int(rows)
+            j = (int(page) - 1) * int(rows) + int(rows)
+            result = {}
+            dict = []
+            num = 0
+            for g in groups:
+                repositorys = Group.objects.get(pk=g.id).ewsrepository_set.all()
+                for r in repositorys:
+                    num = num + 1
+                    dic = {}
+                    dic['id'] = r.id
+                    dic['repository'] = r.repository
+                    dic['description'] = r.repository_desc
+                    dic['created_time'] = r.created_time
+                    dict.append(dic)
+            result['code'] = 0
+            result['msg'] = ""
+            result['count'] = num
+            result['data'] = dict
+            return JsonResponse(result, safe=False)
 
 
 #  获取公有仓库的所有镜像
@@ -44,9 +106,9 @@ def get_repositorypublist(request):
         return redirect('/login/')
 
 
-# 获取公有、开发、测试、发布仓库的镜像标签
+# 获取公有镜像标签
 @csrf_exempt
-def get_imageTags(request):
+def imagetagspub(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
         registry = request.GET.get('registry')
@@ -55,3 +117,8 @@ def get_imageTags(request):
 
     else:
         return redirect('/login/')
+
+
+# 开发、测试、发布镜像标签
+def imagetags(request):
+    pass

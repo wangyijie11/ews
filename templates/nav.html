@@ -48,10 +48,10 @@
                 <li class="layui-nav-item layui-nav-itemed">
                     <a class="" href="javascript:;">镜像仓库</a>
                     <dl class="layui-nav-child">
-                        <dd><a href="{% url 'repository:repositoryPub' %}">公有仓库</a></dd>
-                        <dd><a href="javascript:;">开发仓库</a></dd>
-                        <dd><a href="javascript:;">测试仓库</a></dd>
-                        <dd><a href="javascript:;">发布仓库</a></dd>
+                        <dd><a href="{% url 'repository:repositorypublist' %}">公有仓库</a></dd>
+                        <dd><a href="{% url 'repository:repositorylist' %}?registry=2">开发仓库</a></dd>
+                        <dd><a href="{% url 'repository:repositorylist' %}?registry=3">测试仓库</a></dd>
+                        <dd><a href="{% url 'repository:repositorylist' %}?registry=4">发布仓库</a></dd>
                     </dl>
                 </li>
                 <li class="layui-nav-item">

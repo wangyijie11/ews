@@ -1,0 +1,29 @@
+{% extends 'nav.html' %}
+{% load staticfiles %}
+{% block css %}
+<link rel="stylesheet" href="/static/layui/css/layui.css">
+
+{% endblock %}
+
+{% block content %}
+
+    <!--<div style="top: 60px; left: 205px; bottom: 60px!important; width: 200px; overflow-x: hidden; border-right: 1px solid #eee; background-color: #fff; position: fixed; z-index: 999;">-->
+    <div class="layui-row layui-col-space1">
+    <!-- 镜像标签表格-->
+        <div class="layui-col-md3">
+            <table id="imagelist" lay-filter="tableImage"></table>
+        </div>
+        <!-- 镜像标签表格-->
+        <div class="layui-col-md9">
+            <table id="tagslist" lay-filter="tableTag"></table>
+        </div>
+    </div>
+
+
+
+
+{% endblock %}
+
+{% block script%}
+
+{% endblock %}

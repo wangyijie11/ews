@@ -1,0 +1,53 @@
+{% extends 'nav.html' %}
+{% load staticfiles %}
+{% block css %}
+<link rel="stylesheet" href="/static/layui/css/layui.css">
+{% endblock %}
+
+{% block content %}
+    <!-- 项目镜像仓库表格-->
+    <table id="versionlist" lay-filter="tableDemo"></table>
+{% endblock %}
+
+{% block script%}
+    <script>
+        function getQueryString(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null) return unescape(r[2]);
+            return null;
+        }
+
+        layui.use(['table', 'jquery', 'layer', 'form'], function () {
+            var table = layui.table,
+                layer = layui.layer,
+                form = layui.form,
+                $ = layui.jquery,
+                registry = getQueryString('registry');
+
+            //表格渲染
+            table.render({
+                elem: '#versionlist', //指定原始表格元素选择器（推荐id选择器）
+                url: '{% url 'repository:repository' %}',
+                method: 'get',
+                page: true, //分页
+                limit: 10,
+                skin: 'line', //行边框风格
+                even: true, //开启隔行背景
+                toolbar: '#toolbarDemo',
+                cols: [[
+                    {checkbox: true},
+                    {field: 'id', title: 'ID', width: '10%'},
+                    {field: 'repository', title: '仓库', width: '30%'},
+                    {field: 'description', title: '描述', width: '40%'},
+                    {field: 'created_time', title: '创建时间', width: '16%'},
+                ]],
+            });
+            table.on('row(tableDemo)', function(obj) {
+                var data = obj.data,
+                    repository = data.repository;
+                window.location.href = '{% url 'repository:imagetagslist' %}?registry=' + registry + '&repository='+ repository;
+            });
+        });
+    </script>
+{% endblock %}

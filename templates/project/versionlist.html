@@ -5,53 +5,37 @@
 {% endblock %}
 
 {% block content %}
-    <!-- 添加项目表单 -->
-    <div class="layui-row" id="addproject" style="display:none;">
+    <!-- 新建项目版本表单 -->
+    <div class="layui-row" id="addversion" style="display:none;">
         <div class="layui-col-md12">
             <form class="layui-form">
                 {% csrf_token %}
                 <br>
                 <div class="layui-form-item">
-                    <label class="layui-form-label">项目名称：</label>
+                    <label class="layui-form-label">版本号：</label>
                     <div class="layui-input-inline">
-                        <input type="text" name="projectname" class="layui-input" lay-verify="required" placeholder="请输入项目名称（中文）">
-                    </div>
-                </div>
-
-                <div class="layui-form-item">
-                    <label class="layui-form-label">镜像仓库：</label>
-                    <div class="layui-input-inline">
-                        <input type="text" name="repository" class="layui-input" lay-verify="required" placeholder="请输入项目仓库（英文）">
-                    </div>
-                </div>
-
-                <div class="layui-form-item">
-                    <label class="layui-form-label">团队：</label>
-                    <div class="layui-input-inline">
-                        <select name="groupname" id="groupSelect" class="layui-input" lay-verify="required">
-
-                        </select>
+                        <input type="text" name="version" class="layui-input" lay-verify="required" placeholder="请输入版本号（eg: v1.0）">
                     </div>
                 </div>
 
                 <div class="layui-form-item">
                     <div class="layui-input-block">
                         <button type="reset" class="layui-btn layui-btn-primary">重置</button>
-                        <button lay-submit class="layui-btn layui-btn-normal" lay-filter="projectcommit">确认</button>
+                        <button lay-submit class="layui-btn layui-btn-normal" lay-filter="versioncommit">确认</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
-    <!-- 我的项目表格-->
-    <table id="projectlist" lay-filter="tableDemo"></table>
+    <!-- 项目版本表格-->
+    <table id="versionlist" lay-filter="tableDemo"></table>
 {% endblock %}
 
 {% block script%}
      //数据行操作按钮
     <script type="text/html" id="barDemo">
-        <a class="layui-btn layui-btn-xs" lay-event="version">版本</a>
-        <a class="layui-btn layui-btn-xs" lay-event="repo">仓库</a>
+        <a class="layui-btn layui-btn-xs" lay-event="app">应用</a>
+        <a class="layui-btn layui-btn-xs" lay-event="copy">拷贝</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </script>
 
@@ -64,16 +48,24 @@
     </script>
 
     <script>
+        function getQueryString(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null) return unescape(r[2]);
+            return null;
+        }
+
         layui.use(['table', 'jquery', 'layer', 'form'], function () {
             var table = layui.table,
                 layer = layui.layer,
                 form = layui.form,
-                $ = layui.jquery;
+                $ = layui.jquery,
+                projectid = getQueryString('projectid');
 
             //表格渲染
             table.render({
-                elem: '#projectlist', //指定原始表格元素选择器（推荐id选择器）
-                url: '{% url 'project:get_projectlist' %}',
+                elem: '#versionlist', //指定原始表格元素选择器（推荐id选择器）
+                url: '{% url 'project:version' %}?projectid=' + projectid,
                 method: 'get',
                 page: true, //分页
                 limit: 10,
@@ -82,12 +74,11 @@
                 toolbar: '#toolbarDemo',
                 cols: [[
                     {checkbox: true},
-                    {field: 'projectid', title: 'ID', width: '10%'},
-                    {field: 'projectname', title: '项目名', width: '20%'},
-                    {field: 'repository', title: '仓库', width: '15%'},
-                    {field: 'groupname', title: '团队', width: '20%'},
+                    {field: 'id', title: 'ID', width: '10%'},
+                    {field: 'version', title: '版本', width: '20%'},
+                    {field: 'projectname', title: '项目名', width: '30%'},
                     {field: 'created_time', title: '创建时间', width: '16%'},
-                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '15%'},
+                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '20%'},
                 ]],
             });
 
@@ -95,18 +86,17 @@
             table.on('tool(tableDemo)', function (obj) { //注：tool是工具条事件名，host是table原始容器的属性 lay-filter="对应的值"
                 var data = obj.data; //获得当前行数据
                 var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
-                if (layEvent === 'version') { //跳转
-                    id = data['projectid'];
-                    window.location.href = '{% url 'project:versionlist' %}?project=' + id;
-                } else if (layEvent === 'repo') {
+                if (layEvent === 'app') { //跳转
+
+                } else if (layEvent === 'copy') {
 
                 } else if (layEvent === 'del') { //删除
                     layer.confirm('确认删除？', function (index) {
-                        id = data['projectid'];
+                        id = data['id'];
                         obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
                         //向服务端发送删除指令
                         $.ajax({
-                            url: '{% url 'project:project' %}',
+                            url: '{% url 'project:version' %}',
                             type: "delete",
                             data: {"id": id},
                             success: function (data) {
@@ -132,25 +122,12 @@
                 var checkStatus = table.checkStatus(obj.config.id);
                 switch (obj.event) {
                     case 'add':
-                        var url = '{% url 'users:get_grouplist' %}';
-                        $.get(url, function (result) {
-                            var groups = result.data;
-                            var groupSelect = $("#groupSelect");
-                            $.each(groups, function (index,data) {
-                                var groupOption = $("<option value='"+data.id+"'>"+data.groupname+"</option>");
-                                groupSelect.append(groupOption);
-                            });
-
-                            layer.open({
-                                type: 1,
-                                title: "添加项目",
-                                area: ['350px', '300px'],
-                                content: $('#addproject').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
-                            });
-                            /* 渲染表单 */
-                            form.render();
+                        layer.open({
+                            type: 1,
+                            title: "添加版本",
+                            area: ['350px', '200px'],
+                            content: $('#addversion').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
                         });
-
                         break;
                     case 'delete':
 
@@ -158,11 +135,11 @@
                 }
             });
 
-            // 添加项目提交表单
-            form.on('submit(projectcommit)',function (data) {
-                data.field.groupname = $('#groupSelect').val();
+            // 添加版本提交表单
+            form.on('submit(versioncommit)',function (data) {
+                data.field.projectid = projectid
                 $.post({
-                    url: '{% url 'project:project' %}',
+                    url: '{% url 'project:version' %}',
                     data: data.field,
                     success:function (data) {
                         data = JSON.parse(data);
@@ -175,9 +152,7 @@
                         }else if (data["status"] == 2){
                             layer.msg('请求异常');
                         }else if (data["status"] == 3){
-                            layer.msg('镜像仓库已存在');
-                        }else if (data["status"] == 4){
-                            layer.msg('项目已存在');
+                            layer.msg('版本已存在');
                         }
                     }
                 });

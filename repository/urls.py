@@ -19,8 +19,16 @@ from repository import views
 
 app_name = 'repository'
 urlpatterns = [
-    url(r'^repositoryPub/', views.repository_pub, name='repositoryPub'),
+    # 公有仓库
+    url(r'^repositorypublist/', views.repositorypublist, name='repositorypublist'),
+    url(r'^imagetagspublist/', views.imagetagspublist, name='imagetagspublist'),
     url(r'^get_repositorypublist/', views.get_repositorypublist, name='get_repositorypublist'),
-    url(r'^imageTagsPub/', views.get_imageTags, name='imageTagsPub'),
+    url(r'^imagetagspub/', views.imagetagspub, name='imagetagspub'),
+
+    # 开发、测试、发布仓库
+    url(r'^repositorylist/', views.repositorylist, name='repositorylist'),
+    url(r'^imagetagslist/', views.imagetagslist, name='imagetagslist'),
+    url(r'^repositry/', views.repository, name='repository'),
+    url(r'^imagetags/', views.imagetags, name='imagetags'),
 
 ]
