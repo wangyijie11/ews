@@ -130,7 +130,7 @@ def image(request):
         domain = EwsRegistry.objects.get(type=registry).domain
         url = 'http://' + domain + '/v2/_catalog?n=' + rows + '&last=' + repository
         res = urllib.request.urlopen(url, timeout=3.0)
-        
+
         print(res.read().decode())
 
     result = {}
