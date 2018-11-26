@@ -29,6 +29,9 @@ urlpatterns = [
     url(r'^repositorylist/', views.repositorylist, name='repositorylist'),
     url(r'^imagetagslist/', views.imagetagslist, name='imagetagslist'),
     url(r'^repositry/', views.repository, name='repository'),
-    url(r'^imagetags/', views.imagetags, name='imagetags'),
+    url(r'^image/', views.image, name='image'),
+    url(r'^imagetag/', views.imagetag, name='imagetag'),
+
+
 
 ]

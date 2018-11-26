@@ -3,11 +3,11 @@ from django.shortcuts import redirect
 from django.shortcuts import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from . import models
 from django.http import JsonResponse
 import time
 from repository.models import EwsRegistry, EwsRepository, EwsRepositoryPub
 from django.contrib.auth.models import User, Group
+import urllib.request, urllib.response, urllib.error, urllib.parse
 
 
 # Create your views here.
@@ -119,6 +119,33 @@ def imagetagspub(request):
         return redirect('/login/')
 
 
+# 开发、测试、发布镜像
+def image(request):
+    is_login = request.session.get('is_login', False)  # 获取session里的值
+    if is_login:
+        page = request.GET.get('page')
+        rows = request.GET.get('limit')
+        registry = request.GET.get('registry')
+        repository = request.GET.get('repository')
+        domain = EwsRegistry.objects.get(type=registry).domain
+        url = 'http://' + domain + '/v2/_catalog?n=' + rows + '&last=' + repository
+        res = urllib.request.urlopen(url, timeout=3.0)
+        
+        print(res.read().decode())
+
+    result = {}
+    result['code'] = 0
+    result['count'] = 0
+    result['msg'] = ""
+    result['data'] = ""
+    return JsonResponse(result)
+
 # 开发、测试、发布镜像标签
-def imagetags(request):
+def imagetag(request):
     pass
+    result = {}
+    result['code'] = 0
+    result['count'] = 0
+    result['msg'] = ""
+    result['data'] = ""
+    return JsonResponse(result)

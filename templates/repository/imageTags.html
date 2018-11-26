@@ -15,7 +15,7 @@
         </div>
         <!-- 镜像标签表格-->
         <div class="layui-col-md9">
-            <table id="tagslist" lay-filter="tableTag"></table>
+            <table id="taglist" lay-filter="tableTag"></table>
         </div>
     </div>
 
@@ -25,5 +25,82 @@
 {% endblock %}
 
 {% block script%}
+     //数据行操作按钮
+    <script type="text/html" id="barDemoTag">
+        <a class="layui-btn layui-btn-xs" lay-event="push">推送</a>
+        <a class="layui-btn layui-btn-xs" lay-event="deploy">部署</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
 
+    //批量操作按钮
+    <script type="text/html" id="toolbarDemoTag">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="push">推送</button>
+            <button class="layui-btn layui-btn-sm" lay-event="delete">删除</button>
+        </div>
+    </script>
+
+
+    <script>
+        function getQueryString(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null) return unescape(r[2]);
+            return null;
+        }
+
+        layui.use(['table', 'jquery', 'layer', 'form'], function () {
+            var table = layui.table,
+                layer = layui.layer,
+                form = layui.form,
+                $ = layui.jquery,
+                registry = getQueryString('registry'),
+                repository = getQueryString('repository');
+
+            //镜像表格渲染
+            table.render({
+                elem: '#imagelist', //指定原始表格元素选择器（推荐id选择器）
+                url: '{% url 'repository:image' %}?registry=' + registry + '&repository=' + repository ,
+                method: 'get',
+                page: {
+                    layout: ['prev', 'next'],
+                    first: false, //不显示首页
+                    last: false, //不显示尾页
+                }, //分页
+                limit: 10,
+                skin: 'line', //行边框风格
+                even: true, //开启隔行背景
+                cols: [[
+                    {field: 'image', title: '镜像', width: '100%'},
+                ]],
+            });
+
+
+            // 行点击事件
+            table.on('row(tableImage)', function (obj) {
+                var data = obj.data,
+                    image = data.image;
+
+                //tag表格渲染
+                table.render({
+                    elem: '#taglist', //指定原始表格元素选择器（推荐id选择器）
+                    url: '{% url 'repository:imagetag' %}?registry=' + registry + '&repository=' + repository + '&image=' + image,
+                    method: 'get',
+                    page: true, //分页
+                    limit: 10,
+                    skin: 'line', //行边框风格
+                    even: true, //开启隔行背景
+                    toolbar: '#toolbarDemoTag',
+                    cols: [[
+                        {checkbox: true},
+                        {field: 'tag', title: '版本', width: '20%'},
+                        {field: 'imageid', title: '镜像ID', width: '20%'},
+                        {field: 'created_time', title: '创建时间', width: '20%'},
+                        {title: '操作', align: 'center', toolbar: '#barDemo', width: '15%'},
+
+                    ]],
+                });
+            });
+        });
+    </script>
 {% endblock %}
