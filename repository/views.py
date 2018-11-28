@@ -123,22 +123,26 @@ def imagetagspub(request):
 def image(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
-        page = request.GET.get('page')
-        rows = request.GET.get('limit')
-        registry = request.GET.get('registry')
-        repository = request.GET.get('repository')
-        domain = EwsRegistry.objects.get(type=registry).domain
-        url = 'http://' + domain + '/v2/_catalog?n=' + rows + '&last=' + repository
-        res = urllib.request.urlopen(url, timeout=3.0)
+        if request.method == 'GET':
+            page = request.GET.get('page')
+            rows = request.GET.get('limit')
+            registry = request.GET.get('registry')
+            repository = request.GET.get('repository')
+            registry_token = 'Bearer ' + str(request.META.get('HTTP_REGISTRY_TOKEN', None))
+            domain = EwsRegistry.objects.get(type=registry).domain
+            url = 'http://' + domain + '/v2/_catalog?n=' + rows + '&last=' + repository
+            headers = {'Authorization' : registry_token}
+            req = urllib.request.Request(url, headers=headers)
+            res = urllib.request.urlopen(req)
 
-        print(res.read().decode())
+            print(res.read().decode())
 
-    result = {}
-    result['code'] = 0
-    result['count'] = 0
-    result['msg'] = ""
-    result['data'] = ""
-    return JsonResponse(result)
+            result = {}
+            result['code'] = 0
+            result['count'] = 0
+            result['msg'] = ""
+            result['data'] = ""
+            return JsonResponse(result)
 
 # 开发、测试、发布镜像标签
 def imagetag(request):
