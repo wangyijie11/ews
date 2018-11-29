@@ -8,6 +8,12 @@ import time
 from repository.models import EwsRegistry, EwsRepository, EwsRepositoryPub
 from django.contrib.auth.models import User, Group
 import urllib.request, urllib.response, urllib.error, urllib.parse
+from repository.auth import RegistryAuth
+from base64 import encodestring
+import re
+import requests
+from requests.auth import AuthBase
+from requests.auth import HTTPBasicAuth
 
 
 # Create your views here.
@@ -124,25 +130,52 @@ def image(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
         if request.method == 'GET':
-            page = request.GET.get('page')
-            rows = request.GET.get('limit')
-            registry = request.GET.get('registry')
-            repository = request.GET.get('repository')
-            registry_token = 'Bearer ' + str(request.META.get('HTTP_REGISTRY_TOKEN', None))
-            domain = EwsRegistry.objects.get(type=registry).domain
-            url = 'http://' + domain + '/v2/_catalog?n=' + rows + '&last=' + repository
-            headers = {'Authorization' : registry_token}
-            req = urllib.request.Request(url, headers=headers)
-            res = urllib.request.urlopen(req)
-
-            print(res.read().decode())
-
+            page = request.GET.get('page')  # 分页
+            rows = request.GET.get('limit')  # 每次刷新行数
+            registry = request.GET.get('registry')  # 获取注册服务器
+            repository = request.GET.get('repository')  # 获取查询仓库
             result = {}
             result['code'] = 0
             result['count'] = 0
             result['msg'] = ""
             result['data'] = ""
-            return JsonResponse(result)
+            # 从请求头中获取token
+            registry_token = 'Bearer ' + str(request.META.get('HTTP_REGISTRY_TOKEN', None))
+            domain = EwsRegistry.objects.get(type=registry).domain
+            url = 'http://' + domain + '/v2/_catalog?n=' + rows + '&last=' + repository
+            headers = {'Authorization': registry_token}
+            # 封装请求为对象
+            req = urllib.request.Request(url, headers=headers)
+            try:
+                # 向registry发起请求
+                res = urllib.request.urlopen(req)
+            except urllib.error.HTTPError as ex:
+                if ex.code == 401:
+                    # 获取response的头部信息
+                    www_authenticate = ex.headers['Www-Authenticate']
+                    www_authenticate = www_authenticate[7:].split(',')
+                    dict = {}
+                    for auth in www_authenticate:
+                        # 拆分key=value，去除双引号，组成字典
+                        dict[auth.split('=')[0]] = re.sub('"', '', auth.split('=')[1])
+
+                    # token认证请求所需参数
+                    realm = dict['realm']
+                    service = dict['service']
+                    scope = dict['scope']
+                    user = 'wangyj'
+                    password = '123456'
+
+                    try:
+                        req_token = RegistryAuth(realm, service, scope, user, password)
+                        req_token = req_token.get_registry_token()
+                        # 还剩像registry发请求
+                    except urllib.error.HTTPError as ex:
+                        if ex.code == 401:
+                            result['code'] = 401
+                            return JsonResponse(result, safe=False)
+            return JsonResponse(result, safe=False)
+
 
 # 开发、测试、发布镜像标签
 def imagetag(request):
