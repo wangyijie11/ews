@@ -9,6 +9,7 @@ from repository.models import EwsRegistry, EwsRepository, EwsRepositoryPub
 from django.contrib.auth.models import User, Group
 import urllib.request, urllib.response, urllib.error, urllib.parse
 from repository.auth import RegistryAuth
+from repository.registry import RegistryApi
 from base64 import encodestring
 import re
 import requests
@@ -125,7 +126,7 @@ def imagetagspub(request):
         return redirect('/login/')
 
 
-# 开发、测试、发布镜像
+# 开发、测试、发布镜像的列表
 def image(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
@@ -141,14 +142,12 @@ def image(request):
             result['data'] = ""
             # 从请求头中获取token
             registry_token = 'Bearer ' + str(request.META.get('HTTP_REGISTRY_TOKEN', None))
-            domain = EwsRegistry.objects.get(type=registry).domain
-            url = 'http://' + domain + '/v2/_catalog?n=' + rows + '&last=' + repository
-            headers = {'Authorization': registry_token}
-            # 封装请求为对象
-            req = urllib.request.Request(url, headers=headers)
+            registry_realm = EwsRegistry.objects.get(type=registry).domain
+
+
+
             try:
-                # 向registry发起请求
-                res = urllib.request.urlopen(req)
+                pass
             except urllib.error.HTTPError as ex:
                 if ex.code == 401:
                     # 获取response的头部信息

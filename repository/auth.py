@@ -28,7 +28,6 @@ class RegistryAuth(object):
         auth_url = self.realm + '?service=' + self.service + '&scope=' + self.scope
         return auth_url
 
-
     # 封装HTTP BASIC AUTH
     def get_basic_auth(self):
         basic_auth = HTTPBasicAuth(self.user, self.password)
