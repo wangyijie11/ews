@@ -135,28 +135,32 @@ def image(request):
             rows = request.GET.get('limit')  # 每次刷新行数
             registry = request.GET.get('registry')  # 获取注册服务器
             repository = request.GET.get('repository')  # 获取查询仓库
+            registry_token = 'Bearer ' + str(request.META.get('HTTP_REGISTRY_TOKEN', None))  # 从请求头中获取token
+            registry_realm = EwsRegistry.objects.get(type=registry).domain
             result = {}
             result['code'] = 0
             result['count'] = 0
             result['msg'] = ""
             result['data'] = ""
-            # 从请求头中获取token
-            registry_token = 'Bearer ' + str(request.META.get('HTTP_REGISTRY_TOKEN', None))
-            registry_realm = EwsRegistry.objects.get(type=registry).domain
-
-
-
             try:
-                pass
+                registry_api = RegistryApi(registry_realm, registry_token)
+                res = json.loads(registry_api.catalog(rows, repository).read().decode())  # 将返回的byte结果转成str，再转车dict
+                res_list = list(res.values())
+                print(res_list)
+
+                print(res.read().decode())
+                return JsonResponse(result, safe=False)
             except urllib.error.HTTPError as ex:
+                print(ex.code)
+                print(ex.reason)
+                print(ex.headers)
                 if ex.code == 401:
                     # 获取response的头部信息
                     www_authenticate = ex.headers['Www-Authenticate']
                     www_authenticate = www_authenticate[7:].split(',')
                     dict = {}
                     for auth in www_authenticate:
-                        # 拆分key=value，去除双引号，组成字典
-                        dict[auth.split('=')[0]] = re.sub('"', '', auth.split('=')[1])
+                        dict[auth.split('=')[0]] = re.sub('"', '', auth.split('=')[1])  # 拆分key=value，去除双引号，组成字典
 
                     # token认证请求所需参数
                     realm = dict['realm']
@@ -167,13 +171,25 @@ def image(request):
 
                     try:
                         req_token = RegistryAuth(realm, service, scope, user, password)
-                        req_token = req_token.get_registry_token()
-                        # 还剩像registry发请求
+                        registry_token = req_token.get_registry_token()
+                        registry_api = RegistryApi(registry_realm, registry_token)
+                        res = registry_api.catalog(rows, repository).read().decode()  # 将返回的字节结果转字符串
+                        # 还没写完，重新获取token后，向registry发送请求
+
+                        return JsonResponse(result, safe=False)
+
                     except urllib.error.HTTPError as ex:
                         if ex.code == 401:
                             result['code'] = 401
                             return JsonResponse(result, safe=False)
-            return JsonResponse(result, safe=False)
+
+                elif ex.code == 404:
+                    return JsonResponse(result, safe=False)
+
+                else:
+                    result['code'] = 404
+                    return JsonResponse(result, safe=False)
+
 
 
 # 开发、测试、发布镜像标签

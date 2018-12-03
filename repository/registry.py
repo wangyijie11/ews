@@ -25,7 +25,7 @@ class RegistryApi(object):
         n = n
         last = last
         if n and last:
-            url = 'http://' + self.realm + '/v2/_catalog?n=' + n + 'last=' + last
+            url = 'http://' + self.realm + '/v2/_catalog?n=' + n + '&last=' + last
         elif not n and last:
             url = 'http://' + self.realm + '/v2/_catalog?last=' + last
         elif n and not last:
