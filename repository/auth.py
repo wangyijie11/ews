@@ -20,7 +20,7 @@ class RegistryAuth(object):
         auth_url = self.get_auth_url()
         basic_auth = self.get_basic_auth()
         res_auth = requests.post(url=auth_url, auth=basic_auth, verify=False)
-        token = json.loads(res_auth.text)
+        token = json.loads(res_auth.text)["token"]
         return token
 
     # 封装url
