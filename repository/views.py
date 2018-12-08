@@ -138,6 +138,7 @@ def image(request):
                 result = registry_api.catalog(rows, repository)
                 return JsonResponse(result, safe=False)
             except urllib.error.HTTPError as ex:
+                # print(ex.headers)
                 if ex.code == 401:
 
                     auth_server = registry_api.get_www_authenticate(ex)

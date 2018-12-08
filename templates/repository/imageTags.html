@@ -10,12 +10,16 @@
     <!--<div style="top: 60px; left: 205px; bottom: 60px!important; width: 200px; overflow-x: hidden; border-right: 1px solid #eee; background-color: #fff; position: fixed; z-index: 999;">-->
     <div class="layui-row layui-col-space1">
     <!-- 镜像标签表格-->
-        <div class="layui-col-md3">
+        <div class="layui-col-md2">
             <table id="imagelist" lay-filter="tableImage"></table>
         </div>
         <!-- 镜像标签表格-->
-        <div class="layui-col-md9">
+        <div class="layui-col-md7">
             <table id="taglist" lay-filter="tableTag"></table>
+        </div>
+        <!-- 镜像推送表格-->
+        <div class="layui-col-md3">
+            <table id="pushlist" lay-filter="tablePush"></table>
         </div>
     </div>
 
@@ -33,10 +37,9 @@
     </script>
 
     //批量操作按钮
-    <script type="text/html" id="toolbarDemoTag">
+    <script type="text/html" id="toolbarDemo">
         <div class="layui-btn-container">
             <button class="layui-btn layui-btn-sm" lay-event="push">推送</button>
-            <button class="layui-btn layui-btn-sm" lay-event="delete">删除</button>
         </div>
     </script>
 
@@ -63,10 +66,12 @@
             var table = layui.table,
                 layer = layui.layer,
                 form = layui.form,
-                $ = layui.jquery,
-                registry = getQueryString('registry'),
-                repository = getQueryString('repository'),
-                registry_token = getCookie('Registry-Token');
+                $ = layui.jquery;
+            var registry = getQueryString('registry');
+            var repository = getQueryString('repository');
+            var registry_token = getCookie('Registry-Token');
+            var abbr_image = ''; //取项目之后的镜像
+            var pre_push = []; //预推送的镜像
 
             //镜像表格渲染
             table.render({
@@ -83,8 +88,37 @@
                 skin: 'line', //行边框风格
                 even: true, //开启隔行背景
                 cols: [[
-                    {field: 'image', title: '镜像', width: '100%'},
+                    {field: 'image', title: '镜像'},
                 ]],
+            });
+
+            //tag表格渲染
+            var tableInsTag = table.render({
+                elem: '#taglist', //指定原始表格元素选择器（推荐id选择器）
+                page: true, //分页
+                limit: 10,
+                skin: 'line', //行边框风格
+                even: true, //开启隔行背景
+                cols: [[
+                    {field: 'tag', title: '版本'},
+                    {field: 'imageid', title: '镜像ID'},
+                    {field: 'created_time', title: '创建时间'},
+                    {title: '操作', align: 'center', toolbar: '#barDemoTag'},
+                ]],
+            });
+
+            //推送表格渲染
+            var tableInsPush = table.render({
+                elem: '#pushlist', //指定原始表格元素选择器（推荐id选择器）
+                page: true, //分页
+                limit: 10,
+                skin: 'line', //行边框风格
+                even: true, //开启隔行背景
+                toolbar: '#toolbarDemo',
+                cols: [[
+                    {field: 'pre_image', title: '预推送镜像'},
+                ]],
+                data: pre_push,
             });
 
 
@@ -92,25 +126,43 @@
             table.on('row(tableImage)', function (obj) {
                 var data = obj.data,
                     image = repository + '/' + data.image;
+                abbr_image = data.image;
 
-                //tag表格渲染
-                table.render({
-                    elem: '#taglist', //指定原始表格元素选择器（推荐id选择器）
+                //tag表格重载
+                tableInsTag.reload({
                     url: '{% url 'repository:imagetag' %}?registry=' + registry + '&image=' + image,
                     method: 'get',
-                    page: true, //分页
-                    limit: 10,
-                    skin: 'line', //行边框风格
-                    even: true, //开启隔行背景
-                    toolbar: '#toolbarDemoTag',
-                    cols: [[
-                        {checkbox: true},
-                        {field: 'tag', title: '版本', width: '25%'},
-                        {field: 'imageid', title: '镜像ID', width: '25%'},
-                        {field: 'created_time', title: '创建时间', width: '25%'},
-                        {title: '操作', align: 'center', toolbar: '#barDemoTag', width: '20%'},
+                });
+            });
 
-                    ]],
+            // 双击添加加推送镜像
+            table.on('rowDouble(tableTag)',function(obj) {
+                var data = obj.data;
+                var pre_image = abbr_image + ':' + data.tag;
+                var dict = {};
+                dict['pre_image'] = pre_image ;
+                pre_push.push(dict);
+
+                // 推送表格重载
+                tableInsPush.reload({
+                   data: pre_push,
+                });
+            });
+
+            // 双击去除推送镜像
+            table.on('rowDouble(tablePush)',function(obj) {
+                var data = obj.data;
+                var pre_image = data.pre_image;
+                for(var i=0;i<=pre_push.length;i++){
+                    if(pre_push[i].pre_image == pre_image){
+                        pre_push.splice(i,1);
+                        break;
+                    }
+                }
+
+                // 推送表格重载
+                tableInsPush.reload({
+                   data: pre_push,
                 });
             });
         });

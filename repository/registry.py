@@ -30,7 +30,7 @@ class RegistryApi(object):
         rows = n  # 每次查询返回的匹配数
         repository = last  # 查询的项目仓库，用于匹配
         dict = []
-        while n == rows:
+        while n == rows and any(last):
             url = 'http://' + self.realm + '/v2/_catalog?n=' + n + '&last=' + last
             req = urllib.request.Request(url, headers=headers)
             res = json.loads(urllib.request.urlopen(req).read().decode())  # 将Registry API返回的byte结果转成str，再转成dict
@@ -43,7 +43,10 @@ class RegistryApi(object):
                     dic['image'] = (r.split('/')[1])  # 拆分出镜像名，作为数据输出
                     dict.append(dic)
             rows = project_list.count(repository)  # Registry API参数
-            last = res_list[-1]  # Registry API参数
+            if len(res_list):
+                last = res_list[-1]  # Registry API参数
+            else:
+                last = None
         result = {}
         result['code'] = 0
         result['msg'] = ""
