@@ -23,6 +23,8 @@ urlpatterns = [
     url(r'^project/', views.project, name='project'),
     url(r'^versionlist/', views.versionlist, name='versionlist'),
     url(r'^version/', views.version, name='version'),
+    url(r'^composelist/', views.composelist, name='composelist'),
+    url(r'compose/', views.compose, name='compose'),
 
 
 

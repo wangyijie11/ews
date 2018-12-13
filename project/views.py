@@ -36,6 +36,16 @@ def versionlist(request):
         return redirect('/login/')
 
 
+# 项目版本下的容器启动配置文件
+def composelist(request):
+    is_login = request.session.get('is_login', False)
+    if is_login:
+        ews_account = request.session.get('ews_account')
+        return render(request, 'project/composelist.html', {'ews_account': ews_account})
+    else:
+        return redirect('/login/')
+
+
 # 项目POST/GET/DELETE，添加、删除、获取项目
 @csrf_exempt
 def project(request):
@@ -169,3 +179,23 @@ def version(request):
                     return HttpResponse(json.dumps({"status": 1}))
             except Exception as ex:
                 return HttpResponse(json.dumps({"status": 2}))
+
+
+# 容器启动配置文件GET/POST/DELETE
+@csrf_exempt
+def compose(request):
+    if request.session.get('is_login', None):
+        if request.method == 'GET':
+            version = request.POST.get('version')
+            projectid = request.POST.get('projectid')
+            if version and projectid:
+
+                pass
+            elif not (version and projectid):
+                pass
+            
+
+            elif version:
+                pass
+            elif projectid:
+                pass

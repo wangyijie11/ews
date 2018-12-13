@@ -27,23 +27,40 @@
             </form>
         </div>
     </div>
+    <div class="layui-row">
+    <form class="layui-form" action="">
+        <div class="layui-form-item" style="margin-top: 22px">
+            <label class="layui-form-label">项目：</label>
+            <div class="layui-input-inline">
+                <select name="selectProject">
+                    <option value="浙江" selected="">浙江省</option>
+                </select>
+            </div>
+            <label class="layui-form-label">版本：</label>
+            <div class="layui-input-inline">
+                <select name="selectVersion">
+                    <option value="杭州">杭州</option>
+                </select>
+            </div>
+        </div>
+    </form>
+    </div>
     <!-- 项目版本表格-->
-    <table id="versionlist" lay-filter="tableDemo"></table>
+    <table id="composelist" lay-filter="tableDemo"></table>
 {% endblock %}
 
 {% block script%}
      //数据行操作按钮
     <script type="text/html" id="barDemo">
-        <a class="layui-btn layui-btn-xs" lay-event="app">应用</a>
-        <a class="layui-btn layui-btn-xs" lay-event="compose">配置</a>
-        <a class="layui-btn layui-btn-xs" lay-event="copy">拷贝</a>
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-xs" lay-event="download">下载</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </script>
 
     //批量操作按钮
     <script type="text/html" id="toolbarDemo">
         <div class="layui-btn-container">
-            <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+            <button class="layui-btn layui-btn-sm" lay-event="add">上传</button>
             <button class="layui-btn layui-btn-sm" lay-event="delete">删除</button>
         </div>
     </script>
@@ -65,8 +82,8 @@
 
             //表格渲染
             table.render({
-                elem: '#versionlist', //指定原始表格元素选择器（推荐id选择器）
-                url: '{% url 'project:version' %}?projectid=' + projectid,
+                elem: '#composelist', //指定原始表格元素选择器（推荐id选择器）
+                url: '{% url 'project:compose' %}',
                 method: 'get',
                 page: true, //分页
                 limit: 10,
@@ -76,12 +93,16 @@
                 cols: [[
                     {checkbox: true},
                     {field: 'id', title: 'ID', width: '10%'},
-                    {field: 'version', title: '版本', width: '20%'},
-                    {field: 'projectname', title: '项目名', width: '30%'},
+                    {field: 'file_name', title: '文件名', width: '20%'},
+                    {field: 'version', title: '版本', width: '15%'},
+                    {field: 'projectname', title: '项目名', width: '15%'},
                     {field: 'created_time', title: '创建时间', width: '16%'},
                     {title: '操作', align: 'center', toolbar: '#barDemo', width: '20%'},
                 ]],
             });
+
+            form.render('select','selectProject');
+            form.render('select', 'selectVersion');
 
             //监听工具条,每行
             table.on('tool(tableDemo)', function (obj) { //注：tool是工具条事件名，host是table原始容器的属性 lay-filter="对应的值"

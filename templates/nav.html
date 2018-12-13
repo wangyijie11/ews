@@ -6,12 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>EWS CLOUD</title>
     <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="icon" href="/static/img/logo.png" type="image/png" />
     {% block css %}{% endblock %}
 </head>
 <body class="layui-layout-body">
 <div class="layui-layout layui-layout-admin">
     <div class="layui-header">
-        <div class="layui-logo">EWS  CLOUD</div>
+        <div class="layui-logo"><img src="/static/img/logo.png" class="layui-nav-img">EWS  CLOUD</div>
         <!-- 头部区域（可配合layui已有的水平导航） -->
         <ul class="layui-nav layui-layout-right">
             <li class="layui-nav-item">
@@ -65,14 +66,21 @@
                     <a class="" href="javascript:;">项目维护</a>
                     <dl class="layui-nav-child">
                         <dd><a href="javascript:;">服务列表</a></dd>
-                        <dd><a href="javascript:;">项目列表</a></dd>
-                        <dd><a href="javascript:;">项目编排</a></dd>
+                        <dd><a href="javascript:;">服务编排</a></dd>
                     </dl>
                 </li>
                 <li class="layui-nav-item"><a href="javascript:;">持续集成</a></li>
                 <li class="layui-nav-item"><a href="javascript:;">我的集群</a></li>
-                <li class="layui-nav-item"><a href="{% url 'project:projectlist' %}">我的项目</a></li>
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a class="" href="javascript:;">我的项目</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="{% url 'project:projectlist' %}">项目版本</a></dd>
+                        <dd><a href="{% url 'project:composelist' %}">启动模板</a></dd>
+                        <dd><a href="javascript:;">参数配置</a></dd>
+                    </dl>
+                </li>
                 <li class="layui-nav-item"><a href="{% url 'users:grouplist' %}">我的团队</a></li>
+                <li class="layui-nav-item"><a href="">监控服务</a></li>
             </ul>
         </div>
     </div>
