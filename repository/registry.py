@@ -67,12 +67,12 @@ class RegistryApi(object):
             dic = {}
             dic['tag'] = t
             dict.append(dic)
-        result = {}
-        result['code'] = 0
-        result['msg'] = ""
-        result['count'] = len(tags)
-        result['data'] = dict
-        return result
+        #result = {}
+        #result['code'] = 0
+        #result['msg'] = ""
+        #result['count'] = len(tags)
+        #result['data'] = dict
+        return dict
 
     def get_www_authenticate(self, ex):
         # 获取response的头部信息
