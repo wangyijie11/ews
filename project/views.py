@@ -13,6 +13,8 @@ from django.http import QueryDict
 from django.contrib.auth.models import User, Group
 from project.models import EwsProject, EwsProjectVersion, EwsProjectApp
 from repository.models import EwsRepository
+from project.models import EwsCompose
+from project.projectmgr import *
 # Create your views here.
 
 
@@ -116,11 +118,11 @@ def project(request):
                     dic['projectname'] = p.projectname
                     dic['repository'] = p.repository
                     dic['created_time'] = p.created_time
-                    dict.append(dic)
             result['code'] = 0
             result['msg'] = ""
             result['count'] = num
             result['data'] = dict
+            print(result)
             return JsonResponse(result, safe=False)
 
 
@@ -186,16 +188,81 @@ def version(request):
 def compose(request):
     if request.session.get('is_login', None):
         if request.method == 'GET':
-            version = request.POST.get('version')
-            projectid = request.POST.get('projectid')
+            versionid = request.GET.get('versionid', None)
+            projectid = request.GET.get('projectid', None)
+            ews_accountid = request.session.get('ews_accountid')
+            groups = User.objects.get(pk=ews_accountid).groups.all()
+            page = request.GET.get('page')
+            rows = request.GET.get('limit')
+            i = (int(page) - 1) * int(rows)
+            j = (int(page) - 1) * int(rows) + int(rows)
             if version and projectid:
+                try:
+                    result = {}
+                    data = get_compose_byversion(versionid)
+                    result['data'] = data
+                    result['code'] = 0
+                    result['msg'] = ""
+                    result['count'] = len(data)
+                    return JsonResponse(result, safe=False)
+                except Exception as ex:
+                    result['code'] = 500
+                    result['msg'] = "error:get_compose_byversion"
+                    result['count'] = 0
+                    result['data'] = ""
+                    return JsonResponse(result, safe=False)
 
-                pass
-            elif not (version and projectid):
-                pass
-            
+            elif versionid is None and projectid is None:
+                try:
+                    result = {}
+                    dict = []
+                    for g in groups:
+                        projects = Group.objects.get(pk=g.id).ewsproject_set.all()
+                        for p in projects:
+                            data = get_compose_byproject(p.id)
+                            dict = dict + data
+                    print(dict)
+                    result['code'] = 0
+                    result['msg'] = ""
+                    result['count'] = len(dict)
+                    print(len(dict))
+                    result['data'] = dict
+                    print(result)
+                    return JsonResponse(result, safe=False)
+                except Exception as ex:
+                    print(ex)
+                    result['code'] = 500
+                    result['msg'] = "error:get_compose_byproject"
+                    result['count'] = 0
+                    result['data'] = ""
+                    return JsonResponse(result, safe=False)
 
-            elif version:
-                pass
-            elif projectid:
-                pass
+            elif any(projectid) and versionid is None:
+                try:
+                    result = {}
+                    dict = []
+                    projects = Group.objects.get(pk=g.id).ewsproject_set.all()
+                    for p in projects:
+                        data = get_compose_byproject(p.id)
+                        if len(data) != 0 :
+                            dict = dict + data
+                    result['code'] = 0
+                    result['msg'] = ""
+                    result['count'] = len(dict)
+                    result['data'] = dict
+                    return JsonResponse(result, safe=False)
+                except Exception as ex:
+                    result['code'] = 500
+                    result['msg'] = "error:get_compose_byproject"
+                    result['count'] = 0
+                    result['data'] = ""
+                    return JsonResponse(result, safe=False)
+
+            else:
+                result = {}
+                result['code'] = 400
+                result['msg'] = "参数错误"
+                result['count'] = 0
+                result['data'] = ""
+                return JsonResponse(result, safe=False)
+
