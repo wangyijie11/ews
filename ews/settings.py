@@ -145,3 +145,9 @@ SESSION_COOKIE_AGE = 1209600
 
 
 MEDIA_ROOT = '/data/resource/'
+
+
+# docker安装包路径和远程安装路径
+DOCKER_LOCAL_PATH = 'E:\\EWS_SVN\\trunk\\17.项目结项\\V1.2\\EWS项目发布平台V1.2_SE一键部署\\'
+DOCKER_INSTALL_PKG = 'ews.tar.gz'
+DOCKER_REMOTE_PATH = '/root/'

@@ -91,6 +91,31 @@ class Centos7(object):
         client.close()
         return disk
 
+    # 执行命令
+    def ssh_cmd(self, cmd):
+        client = self.connect()
+        stdin, stdout, stderr = client.exec_command(cmd)
+        result = stdout.read()
+        return result
+
+    # 传文件
+    def sftp_put(self, local_path, remote_path):
+        transport = paramiko.Transport((self.host, self.port))
+        transport.connect(username=self.user, password=self.password)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        # 上传
+        sftp.put(local_path, remote_path)
+        transport.close()
+
+    def sftp_get(self, local_path, remote_path):
+        transport = paramiko.Transport((self.host, self.port))
+        transport.connect(username=self.user, password=self.password)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        # 下载
+        sftp.get(remote_path, local_path)
+        transport.close()
+
+
 
 # 测试
 def test(host):

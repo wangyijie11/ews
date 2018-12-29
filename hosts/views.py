@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render
 from django.shortcuts import redirect
 from django.shortcuts import HttpResponse
@@ -52,41 +53,6 @@ def containerlist(request):
         return redirect('/login/')
 
 
-# 获取主机列表
-@csrf_exempt
-def get_hostlist(request):
-    page = request.GET.get('page')
-    rows = request.GET.get('limit')
-    i = (int(page) - 1) * int(rows)
-    j = (int(page) - 1) * int(rows) + int(rows)
-    hosts = EwsHost.objects.all()
-    total = hosts.count()
-    hosts = hosts[i:j]
-    resultdict = {}
-    resultdict['total'] = total
-    dict = []
-    for h in hosts:
-        dic = {}
-        dic['id'] = h.id
-        dic['ip'] = h.ip
-        dic['hostname'] = h.hostname
-        dic['description'] = h.description
-        dic['cpu_cores'] = h.cpu_cores
-        dic['memory'] = h.memory
-        dic['disk'] = h.disk
-        dic['docker_version'] = h.docker_version
-        dic['os'] = h.os
-        dic['tab_user_id'] = h.tab_user_id
-        dic['tab_group_id'] = h.tab_group_id
-        dic['tab_groupname'] = Group.objects.get(pk=h.tab_group_id).name
-        dict.append(dic)
-    resultdict['code'] = 0
-    resultdict['msg'] = ""
-    resultdict['count'] = total
-    resultdict['data'] = dict
-    return JsonResponse(resultdict, safe=False)
-
-
 # 远程获取主机信息
 def get_hostinfo(host, port, user, password):
     session = Centos7(host, port, user, password)  # 类Centos7的connect方法需要改成ssh连接
@@ -104,12 +70,13 @@ def get_hostinfo(host, port, user, password):
 def host(request):
     if request.session.get('is_login', None):
         ews_accountid = request.session.get('ews_accountid')
+
         if request.method == 'POST':
             host = request.POST.get('host')
             port = request.POST.get('port')
             user = request.POST.get('user')
             password = request.POST.get('password')
-            ews_groupid = request.POST.get('ews_groupid')
+            ews_groupid = request.POST.get('groupname')
             try:
                 # 添加公钥
                 # if not add_pubkey(host, port, user, password):
@@ -134,6 +101,7 @@ def host(request):
                 else:
                     return HttpResponse(json.dumps({"status": 2}))
             except Exception as ex:
+                print(ex)
                 return HttpResponse(json.dumps({"status": 3}))
 
         if request.method == 'DELETE':
@@ -146,6 +114,39 @@ def host(request):
                     return HttpResponse(json.dumps({"status": 1}))
             except Exception as ex:
                 return HttpResponse(json.dumps({"status": 2}))
+
+        if request.method == 'GET':
+            groups = User.objects.get(pk=ews_accountid).groups.all()
+            page = request.GET.get('page')
+            rows = request.GET.get('limit')
+            i = (int(page) - 1) * int(rows)
+            j = (int(page) - 1) * int(rows) + int(rows)
+            result = {}
+            dict = []
+            for g in groups:
+                hosts = Group.objects.get(pk=g.id).ewshost_set.all()
+                for h in hosts:
+                    dic = {}
+                    dic['id'] = h.id
+                    dic['ip'] = h.ip
+                    dic['hostname'] = h.hostname
+                    dic['description'] = h.description
+                    dic['cpu_cores'] = h.cpu_cores
+                    dic['memory'] = h.memory
+                    dic['disk'] = h.disk
+                    dic['docker_version'] = h.docker_version
+                    dic['os'] = h.os
+                    dic['tab_user_id'] = h.tab_user_id
+                    dic['tab_group_id'] = h.tab_group_id
+                    dic['tab_groupname'] = Group.objects.get(pk=h.tab_group_id).name
+                    dict.append(dic)
+            total = len(dict)
+            dict = dict[i:j]
+            result['code'] = 0
+            result['msg'] = ""
+            result['count'] = total
+            result['data'] = dict
+            return JsonResponse(result, safe=False)
 
 
 # 更新主机备注信息
@@ -217,3 +218,35 @@ def get_containerlist(request):
     resultdict['count'] = total
     resultdict['data'] = dict
     return JsonResponse(resultdict, safe=False)
+
+
+# 主机docker安装，卸载
+@csrf_exempt
+def docker(request):
+    if request.session.get('is_login', None):
+        ews_accountid = request.session.get('ews_accountid')
+        if request.method == 'POST':
+            id = request.POST.get('id')
+            host = EwsHost.objects.get(pk=id)
+            ip = host.ip
+            port = host.ssh_port
+            user = host.ssh_user
+            password = host.ssh_password
+            local_path = settings.DOCKER_LOCAL_PATH + settings.DOCKER_INSTALL_PKG
+            remote_path = settings.DOCKER_REMOTE_PATH + settings.DOCKER_INSTALL_PKG
+            try:
+                session = Centos7(host, port, user, password)
+                session.sftp_put(local_path,remote_path)
+                try:
+                    cmd = 'source ~/.bashrc; cd /' + settings.DOCKER_REMOTE_PATH + '/; tar zxf settings.DOCKER_INSTALL_PKG'
+                    session.ssh_cmd(cmd)
+                    try:
+                        cmd = 'source ~/.bashrc; cd /' + settings.DOCKER_REMOTE_PATH + '/ews/; bash install.sh'
+                        return HttpResponse(json.dumps({"status": 0}))  # 安装成功
+                    except  Exception as ex:
+                        return HttpResponse(json.dumps({"status": 3}))  # 安装失败
+                except Exception as  ex:
+                    return HttpResponse(json.dumps({"status": 2}))  # 解压失败
+            except Exception as ex:
+                return HttpResponse(json.dumps({"status": 1}))  #  文件传输失败
+

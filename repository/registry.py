@@ -27,7 +27,7 @@ class RegistryApi(object):
         n = n
         last = last
         headers = {'Authorization': self.token}
-        rows = n  # 每次查询返回的匹配数
+        rows = n  # rows每次查询返回的匹配数
         repository = last  # 查询的项目仓库，用于匹配
         dict = []
         while n == rows and any(last):
@@ -42,17 +42,13 @@ class RegistryApi(object):
                     project_list.append(r.split('/')[0])  # 拆分出项目名，作为统计n
                     dic['image'] = (r.split('/')[1])  # 拆分出镜像名，作为数据输出
                     dict.append(dic)
-            rows = project_list.count(repository)  # Registry API参数
+            rows = str(project_list.count(repository))  # rows每次查询返回的匹配数
             if len(res_list):
-                last = res_list[-1]  # Registry API参数
+                last = res_list[-1]  # 最后一个镜像
             else:
                 last = None
-        result = {}
-        result['code'] = 0
-        result['msg'] = ""
-        result['count'] = len(dict)
-        result['data'] = dict
-        return result
+        print(dict)
+        return dict
 
     # 获取某个镜像的tags
     def tags(self, image):

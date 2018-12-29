@@ -21,11 +21,11 @@ app_name = 'hosts'
 urlpatterns = [
     url(r'^hostlist/', views.hostlist, name='hostlist'),
     url(r'^firewall/', views.firewall, name='firewall'),
-    url(r'^get_hostlist/', views.get_hostlist, name='get_hostlist'),
     url(r'^imagelist/', views.imagelist, name='imagelist'),
     url(r'^containerlist', views.containerlist, name='containerlist'),
     url(r'^get_imagelist/', views.get_imagelist, name='get_imagelist'),
     url(r'^get_containerlist/', views.get_containerlist, name='get_contaienrlist'),
     url(r'^host/', views.host, name='host'),
     url(r'^post_desc/', views.post_desc, name='post_desc'),
+    url(r'^docker/', views.docker, name='docker'),
 ]

@@ -37,6 +37,14 @@
                     </div>
                 </div>
                 <div class="layui-form-item">
+                    <label class="layui-form-label">团队：</label>
+                    <div class="layui-input-inline">
+                        <select name="groupname" id="groupSelect" class="layui-input" lay-verify="required">
+
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
                     <div class="layui-input-block">
                         <button type="reset" class="layui-btn layui-btn-primary">重置</button>
                         <button lay-submit class="layui-btn layui-btn-normal" lay-filter="hostcommit">确认</button>
@@ -101,7 +109,7 @@
             //方法级渲染
             table.render({
                 elem: '#hostlist', //指定原始表格元素选择器（推荐id选择器）
-                url: '{% url 'hosts:get_hostlist' %}',
+                url: '{% url 'hosts:host' %}',
                 method: 'get',
                 page: true, //分页
                 limit: 10,
@@ -198,7 +206,22 @@
                 } else if (layEvent === 'docker') {
                     layer.confirm('确认安装docker？', function (index) {
                         layer.close(index);
-                        //向服务端发送删除指令
+                        //向服务端发送安装docker指令
+                        $.ajax({
+                            url: '{% url 'hosts:docker' %}',
+                            type: "post",
+                            data: {"id": id},
+                            success: function (data) {
+                                data = JSON.parse(data);
+                                if (data["status"] == 0) {
+                                    layer.msg('Docker安装成功');
+                                } else if (data["status"] == 1) {
+                                    layer.msg('Docker安装删除');
+                                } else {
+                                    layer.msg('运行异常');
+                                }
+                            }
+                        });
                     });
                 }
             });
@@ -207,11 +230,22 @@
                 var checkStatus = table.checkStatus(obj.config.id);
                 switch (obj.event) {
                     case 'add':
-                        layer.open({
-                            type: 1,
-                            title: "添加主机",
-                            area: ['350px', '350px'],
-                            content: $('#addhost').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
+                        var url = '{% url 'users:get_grouplist' %}';
+                        $.get(url, function (result) {
+                            var groups = result.data;
+                            var groupSelect = $("#groupSelect");
+                            $.each(groups, function (index, data) {
+                                var groupOption = $("<option value='" + data.id + "'>" + data.groupname + "</option>");
+                                groupSelect.append(groupOption);
+                            });
+                            layer.open({
+                                type: 1,
+                                title: "添加主机",
+                                area: ['350px', '380px'],
+                                content: $('#addhost').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
+                            });
+                            /* 渲染表单 */
+                            form.render();
                         });
                         break;
                     case 'delete':

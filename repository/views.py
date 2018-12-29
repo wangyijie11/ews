@@ -129,13 +129,22 @@ def image(request):
         if request.method == 'GET':
             page = request.GET.get('page')  # 分页
             rows = request.GET.get('limit')  # 每次刷新行数
+            i = (int(page) - 1) * int(rows)
+            j = (int(page) - 1) * int(rows) + int(rows)
             registry = request.GET.get('registry')  # 获取注册服务器
             repository = request.GET.get('repository')  # 获取查询仓库
             registry_token = str(request.META.get('HTTP_REGISTRY_TOKEN', None))  # 从请求头中获取token
             registry_realm = EwsRegistry.objects.get(type=registry).domain
             try:
                 registry_api = RegistryApi(registry_realm, registry_token)  # 生成Registry API对象
-                result = registry_api.catalog(rows, repository)
+                dict = registry_api.catalog(rows, repository)  # 返回镜像名list
+                total = len(dict)
+                dict = dict[i:j]
+                result = {}
+                result['code'] = 0
+                result['msg'] = ""
+                result['count'] = total
+                result['data'] = dict
                 return JsonResponse(result, safe=False)
             except urllib.error.HTTPError as ex:
                 # print(ex.headers)
@@ -153,7 +162,14 @@ def image(request):
                         req_token = RegistryAuth(realm, service, scope, user, password)
                         new_registry_token = req_token.get_registry_token()
                         new_registry_api = RegistryApi(registry_realm, new_registry_token)
-                        result = new_registry_api.catalog(rows, repository)
+                        dict = new_registry_api.catalog(rows, repository)  # 返回镜像名list
+                        total = len(dict)
+                        dict = dict[i:j]
+                        result = {}
+                        result['code'] = 0
+                        result['msg'] = ""
+                        result['count'] = total
+                        result['data'] = dict
                         return JsonResponse(result, safe=False)
 
                     except urllib.error.HTTPError as ex:
@@ -161,11 +177,15 @@ def image(request):
                             result = {}
                             result['code'] = 401
                             result['msg'] = '未授权'
+                            result['count'] = 0
+                            result['data'] = ""
                             return JsonResponse(result, safe=False)
                 else:
                     result = {}
                     result['code'] = 500
                     result['msg'] = '内部错误'
+                    result['count'] = 0
+                    result['data'] = ""
                     return JsonResponse(result, safe=False)
 
 
@@ -223,11 +243,15 @@ def imagetag(request):
                             result = {}
                             result['code'] = 401
                             result['msg'] = '未授权'
+                            result['count'] = 0
+                            result['data'] = ""
                             return JsonResponse(result, safe=False)
                 else:
                     result = {}
                     result['code'] = 500
                     result['msg'] = '内部错误'
+                    result['count'] = 0
+                    result['data'] = ""
                     return JsonResponse(result, safe=False)
 
 

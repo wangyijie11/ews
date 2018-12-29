@@ -7,7 +7,6 @@
 
 {% block content %}
 
-    <!--<div style="top: 60px; left: 205px; bottom: 60px!important; width: 200px; overflow-x: hidden; border-right: 1px solid #eee; background-color: #fff; position: fixed; z-index: 999;">-->
     <div class="layui-row layui-col-space1">
     <!-- 镜像标签表格-->
         <div class="layui-col-md2">
@@ -80,11 +79,12 @@
                 method: 'get',
                 headers: {'Registry-Token' : registry_token},
                 page: {
-                    layout: ['prev', 'next'],
-                    first: false, //不显示首页
-                    last: false, //不显示尾页
-                }, //分页
-                limit: 10,
+                    layout:['prev', 'page', 'next', 'count'],
+                    groups: 1,
+                    first: false,
+                    last: false,
+                },
+                limit: 15,
                 skin: 'line', //行边框风格
                 even: true, //开启隔行背景
                 cols: [[

@@ -118,11 +118,12 @@ def project(request):
                     dic['projectname'] = p.projectname
                     dic['repository'] = p.repository
                     dic['created_time'] = p.created_time
+                    dict.append(dic)
+            dict = dict[i:j]
             result['code'] = 0
             result['msg'] = ""
             result['count'] = num
             result['data'] = dict
-            print(result)
             return JsonResponse(result, safe=False)
 
 
