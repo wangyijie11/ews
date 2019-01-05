@@ -87,7 +87,7 @@
         <a class="layui-btn layui-btn-xs" lay-event="docker">docker</a>
         <a class="layui-btn layui-btn-xs" lay-event="container">容器</a>
         <a class="layui-btn layui-btn-xs" lay-event="image">镜像</a>
-        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <!--<a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>-->
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </script>
 
@@ -121,10 +121,10 @@
                     {field: 'id', title: 'ID', width: '10%'},
                     {field: 'ip', title: 'IP', width: '15%'},
                     {field: 'state', title: '状态', width: '8%'},
-                    {field: 'containers', title: '容器数', width: '8%'},
-                    {field: 'docker_version', title: 'docker', width: '10%'},
+                    {field: 'cpu_state', title: 'CPU', width: '10%'},
+                    {field: 'memory_state', title: '内存', width: '8%'},
+                    {field: 'disk_state', title: '磁盘', width: '10%'},
                     {field: 'tab_groupname', title: '组', width: '10%'},
-                    {field: 'description', title: '备注', width: '10%'},
                     {title: '操作', align: 'center', toolbar: '#barDemo', width: '25%'},
                 ]],
             });
@@ -271,7 +271,7 @@
                         }else if (data["status"] == 1){
                             layer.msg('添加公钥失败');
                         }else if (data["status"] == 2){
-                            layer.msg('获取主机信息失败');
+                            layer.msg('未获取主机信息，可能网络不通');
                         }else if (data["status"] == 3){
                             layer.msg('添加主机过程遇未知错误');
                         }

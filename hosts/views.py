@@ -56,13 +56,18 @@ def containerlist(request):
 # 远程获取主机信息
 def get_hostinfo(host, port, user, password):
     session = Centos7(host, port, user, password)  # 类Centos7的connect方法需要改成ssh连接
-    hostname = session.get_hostname()
-    cpuinfo = session.get_cpuinfo()
-    memory = session.get_memory()
-    version = session.get_version()
-    disk = session.get_disk()
-    data = {'hostname': hostname, 'cpuinfo': cpuinfo, 'memory': memory, 'version': version, 'disk': disk}
-    return data
+    state = session.get_state()
+    if state == 'Up':
+        hostname = session.get_hostname()
+        cpuinfo = session.get_cpuinfo()
+        memory = session.get_memory()
+        version = session.get_version()
+        disk = session.get_disk()
+        data = {'hostname': hostname, 'cpuinfo': cpuinfo, 'memory': memory, 'version': version, 'disk': disk}
+        return data
+    elif state == 'Down':
+      return False
+
 
 
 # 主机GET/POST，添加主机、删除主机、获取主机信息
@@ -101,7 +106,6 @@ def host(request):
                 else:
                     return HttpResponse(json.dumps({"status": 2}))
             except Exception as ex:
-                print(ex)
                 return HttpResponse(json.dumps({"status": 3}))
 
         if request.method == 'DELETE':
@@ -126,6 +130,13 @@ def host(request):
             for g in groups:
                 hosts = Group.objects.get(pk=g.id).ewshost_set.all()
                 for h in hosts:
+                    # 获取主机动态状态
+                    session = Centos7(h.ip, h.ssh_port, h.ssh_user, h.ssh_password)  # 类Centos7的connect方法需要改成ssh连接
+                    state = session.get_state()
+                    cpu_state = session.get_cpustate()
+                    memory_state = session.get_memorystate()
+                    disk_state = session.get_diskstate()
+
                     dic = {}
                     dic['id'] = h.id
                     dic['ip'] = h.ip
@@ -139,6 +150,10 @@ def host(request):
                     dic['tab_user_id'] = h.tab_user_id
                     dic['tab_group_id'] = h.tab_group_id
                     dic['tab_groupname'] = Group.objects.get(pk=h.tab_group_id).name
+                    dic['state'] = state
+                    dic['cpu_state'] = cpu_state
+                    dic['memory_state'] = memory_state
+                    dic['disk_state'] = disk_state
                     dict.append(dic)
             total = len(dict)
             dict = dict[i:j]
@@ -250,3 +265,27 @@ def docker(request):
             except Exception as ex:
                 return HttpResponse(json.dumps({"status": 1}))  #  文件传输失败
 
+
+# 主机实时状态监控数据，写了暂时没用
+@csrf_exempt
+def hostmonitor(request):
+    if request.session.get('is_login', None):
+        id = request.GET.get('id')
+        obj = EwsHost.objects.get(pk=id)
+        host = obj.ip
+        port = obj.ssh_port
+        user = obj.ssh_user
+        password = obj.ssh_password
+        try:
+            session = Centos7(host, port, user, password)  # 类Centos7的connect方法需要改成ssh连接
+            cpu_state = session.get_cpustate()
+            memory_state = session.get_memorystate()
+            disk_state = session.get_diskstate()
+            if [any(cpu_state) and any(memory_state) and any(disk_state)]:
+                data = {'status': 0, 'cpu_state': cpu_state, 'memory_state': memory_state, 'disk_state': disk_state}
+            else:
+                data = {'status': 1}
+            return HttpResponse(json.dumps(data))
+        except Exception as ex:
+            data = {'status': 2}
+            return HttpResponse(json.dumps(data))

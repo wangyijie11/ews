@@ -28,4 +28,5 @@ urlpatterns = [
     url(r'^host/', views.host, name='host'),
     url(r'^post_desc/', views.post_desc, name='post_desc'),
     url(r'^docker/', views.docker, name='docker'),
+    url(r'^hostmonitor/', views.hostmonitor, name='hostmonitor'),
 ]

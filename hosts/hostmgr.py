@@ -3,6 +3,7 @@ from subprocess import Popen, PIPE
 import re
 import os
 import sys
+import time
 
 
 class Centos7(object):
@@ -43,7 +44,7 @@ class Centos7(object):
             # ssh.connect(hostname=self.host, port=self.port, username=self.user, pkey=key_file, timeout=5)
             return ssh
         except Exception as e:
-            return e
+            return False
 
     def get_hostname(self):
         client = self.connect()
@@ -115,6 +116,66 @@ class Centos7(object):
         sftp.get(remote_path, local_path)
         transport.close()
 
+    def get_cpustate(self):
+        client = self.connect()
+        stdin, stdout, stderr = client.exec_command('cat /proc/stat | grep "cpu "')
+        str_out = stdout.read().decode()
+        str_err = stderr.read().decode()
+        if str_err != "":
+            return
+        cpu_time_list = re.findall('\d+', str_out)
+        cpu_idle1 = cpu_time_list[3]
+        total_cpu_time1 = 0
+        for t in cpu_time_list:
+            total_cpu_time1 = total_cpu_time1 + int(t)
+        time.sleep(0.1)
+        # 第二次取值
+        stdin, stdout, stderr = client.exec_command('cat /proc/stat | grep "cpu "')
+        str_out = stdout.read().decode()
+        str_err = stderr.read().decode()
+        if str_err != "":
+            return
+        cpu_time_list = re.findall('\d+', str_out)
+        cpu_idle2 = cpu_time_list[3]
+        total_cpu_time2 = 0
+        for t in cpu_time_list:
+            total_cpu_time2 = total_cpu_time2 + int(t)
+        # 两次取值差值
+        cpu_usage = str(round(1 - (float(cpu_idle2) - float(cpu_idle1)) / (total_cpu_time2 - total_cpu_time1), 2) * 100) + '%'
+        client.close()
+        return cpu_usage
+
+    def get_memorystate(self):
+        client = self.connect()
+        stdin, stdout, stderr = client.exec_command('cat /proc/meminfo')
+        str_out = stdout.read().decode()
+        str_err = stderr.read().decode()
+        if str_err != "":
+            return
+        str_total = re.search('MemTotal:.*?\n', str_out).group()
+        totalmem = re.search('\d+', str_total).group()
+        str_free = re.search('MemFree:.*?\n', str_out).group()
+        freemem = re.search('\d+', str_free).group()
+        memory_usage = str((round(1 - float(freemem) / float(totalmem), 2)) * 100) + '%'
+        client.close()
+        return memory_usage
+
+    def get_diskstate(self):
+        client = self.connect()
+        stdin, stdout, stderr = client.exec_command("df | sed -n '2p' | awk '{print $(NF-1)}'")
+        str_out = stdout.read().decode()
+        str_err = stderr.read().decode()
+        disk_usage = str_out.strip('\n')
+        if str_err != "":
+            return
+        else:
+            return disk_usage
+
+    def get_state(self):
+        if self.connect():
+            return 'Up'
+        else:
+            return 'Down'
 
 
 # 测试
