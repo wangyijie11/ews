@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>EWS CLOUD</title>
+    <title>CONT CLOUD</title>
     <link rel="stylesheet" href="/static/layui/css/layui.css">
     <link rel="icon" href="/static/img/logo.png" type="image/png" />
     {% block css %}{% endblock %}
@@ -12,7 +12,7 @@
 <body class="layui-layout-body">
 <div class="layui-layout layui-layout-admin">
     <div class="layui-header">
-        <div class="layui-logo"><img src="/static/img/logo.png" class="layui-nav-img">EWS  CLOUD</div>
+        <div class="layui-logo"><img src="/static/img/logo.png" class="layui-nav-img">CONT  CLOUD</div>
         <!-- 头部区域（可配合layui已有的水平导航） -->
         <ul class="layui-nav layui-layout-right">
             <li class="layui-nav-item">
@@ -32,13 +32,7 @@
         <div class="layui-side-scroll">
             <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
             <ul class="layui-nav layui-nav-tree" lay-filter="test">
-                <li class="layui-nav-item layui-nav-itemed">
-                    <a class="" href="javascript:;">资源面板</a>
-                    <dl class="layui-nav-child">
-                        <dd><a href="{% url 'dashboard' %}">资源</a></dd>
-                        <dd><a href="{% url 'dashboard' %}">监控</a></dd>
-                    </dl>
-                </li>
+                <li class="layui-nav-item"><a href="{% url 'dashboard' %}">资源面板</a></li>
                 <li class="layui-nav-item layui-nav-itemed">
                     <a class="" href="javascript:;">主机管理</a>
                     <dl class="layui-nav-child">
@@ -92,7 +86,7 @@
 
     <div class="layui-footer">
         <!-- 底部固定区域 -->
-        © ews.gisquest.com
+        © 2019 ews.gisquest.com
     </div>
 </div>
 <script type="text/javascript" src="/static/js/jquery-3.3.1.min.js"></script>
@@ -107,7 +101,6 @@
             form = layui.form,
             element = layui.element;
      });
-
 </script>
 {% block script %}{% endblock %}
 </body>

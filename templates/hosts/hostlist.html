@@ -77,7 +77,17 @@
 
     </div>
 
-    <table id="hostlist" lay-filter="tableDemo"></table>
+    <div class="" style="">
+        <div class="layui-breadcrumb" style="visibility: visible;">
+            <a><cite>主机管理</cite></a>
+        </div>
+    </div>
+    <div>
+        <table id="hostlist" lay-filter="tableDemo"></table>
+    </div>
+
+
+
 
 {% endblock %}
 
@@ -100,10 +110,11 @@
     </script>
 
     <script>
-        layui.use(['table', 'jquery', 'layer', 'form'], function () {
+        layui.use(['table', 'jquery', 'layer', 'form', 'element'], function () {
             var table = layui.table,
                 layer = layui.layer,
                 form = layui.form,
+                element = layui.element,
                 $ = layui.jquery;
 
             //方法级渲染
@@ -210,13 +221,13 @@
                         $.ajax({
                             url: '{% url 'hosts:docker' %}',
                             type: "post",
-                            data: {"id": id},
+                            data: {"id": data.id},
                             success: function (data) {
                                 data = JSON.parse(data);
                                 if (data["status"] == 0) {
                                     layer.msg('Docker安装成功');
                                 } else if (data["status"] == 1) {
-                                    layer.msg('Docker安装删除');
+                                    layer.msg('Docker安装包传输失败');
                                 } else {
                                     layer.msg('运行异常');
                                 }

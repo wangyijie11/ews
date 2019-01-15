@@ -132,10 +132,11 @@ def host(request):
                 for h in hosts:
                     # 获取主机动态状态
                     session = Centos7(h.ip, h.ssh_port, h.ssh_user, h.ssh_password)  # 类Centos7的connect方法需要改成ssh连接
-                    state = session.get_state()
-                    cpu_state = session.get_cpustate()
-                    memory_state = session.get_memorystate()
-                    disk_state = session.get_diskstate()
+                    #state = session.get_state()
+                    # 查询太慢，先注释
+                    #cpu_state = session.get_cpustate()
+                    #memory_state = session.get_memorystate()
+                    #disk_state = session.get_diskstate()
 
                     dic = {}
                     dic['id'] = h.id
@@ -150,10 +151,10 @@ def host(request):
                     dic['tab_user_id'] = h.tab_user_id
                     dic['tab_group_id'] = h.tab_group_id
                     dic['tab_groupname'] = Group.objects.get(pk=h.tab_group_id).name
-                    dic['state'] = state
-                    dic['cpu_state'] = cpu_state
-                    dic['memory_state'] = memory_state
-                    dic['disk_state'] = disk_state
+                    #dic['state'] = state
+                    #dic['cpu_state'] = cpu_state
+                    #dic['memory_state'] = memory_state
+                    #dic['disk_state'] = disk_state
                     dict.append(dic)
             total = len(dict)
             dict = dict[i:j]
@@ -180,60 +181,70 @@ def post_desc(request):
 
 # 获取镜像列表
 @csrf_exempt
-def get_imagelist(request):
-    page = request.GET.get('page')
-    rows = request.GET.get('limit')
-    id = request.GET.get('id')
-    ip = EwsHost.objects.get(pk=id).ip
-    i = (int(page) - 1) * int(rows)
-    j = (int(page) - 1) * int(rows) + int(rows)
-    # 根据ip，调用docker engine api获取镜像
-    client = docker.DockerClient(base_url='tcp://' + ip + ':2375')
-    images = client.images.list()
-    total = len(images)
-    images = images[i:j]
-    resultdict = {}
-    dict = []
-    for img in images:
-        dic = {}
-        dic['short_id'] = img.short_id
-        dic['repotag'] = img.attrs.get('RepoTags')
-        dict.append(dic)
-    resultdict['code'] = 0
-    resultdict['msg'] = ""
-    resultdict['count'] = total
-    resultdict['data'] = dict
-    return JsonResponse(resultdict, safe=False)
+def image(request):
+    if request.session.get('is_login', None):
+        if request.method == 'GET':
+            page = request.GET.get('page')
+            rows = request.GET.get('limit')
+            id = request.GET.get('id')
+            ip = EwsHost.objects.get(pk=id).ip
+            i = (int(page) - 1) * int(rows)
+            j = (int(page) - 1) * int(rows) + int(rows)
+            # 根据ip，调用docker engine api获取镜像
+            client = docker.DockerClient(base_url='tcp://' + ip + ':2375')
+            images = client.images.list()
+            total = len(images)
+            images = images[i:j]
+            resultdict = {}
+            dict = []
+            for img in images:
+                dic = {}
+                dic['short_id'] = img.short_id
+                dic['repotag'] = img.attrs.get('RepoTags')
+                dict.append(dic)
+            resultdict['code'] = 0
+            resultdict['msg'] = ""
+            resultdict['count'] = total
+            resultdict['data'] = dict
+            return JsonResponse(resultdict, safe=False)
+        if request.method == 'DELETE':
+            id = QueryDict(request.body).get('id')
+            pass
+
 
 
 # 获取容器列表
 @csrf_exempt
-def get_containerlist(request):
-    page = request.GET.get('page')
-    rows = request.GET.get('limit')
-    id = request.GET.get('id')
-    ip = EwsHost.objects.get(pk=id).ip
-    i = (int(page) - 1) * int(rows)
-    j = (int(page) - 1) * int(rows) + int(rows)
-    # 根据ip，调用docker engine api获取容器
-    client = docker.DockerClient(base_url='tcp://' + ip + ':2375')
-    containers = client.containers.list()
-    total = len(containers)
-    containers = containers[i:j]
-    resultdict = {}
-    dict = []
-    for cont in containers:
-        dic = {}
-        dic['short_id'] = cont.short_id
-        dic['name'] = cont.name
-        dic['status'] = cont.status
-        dict.append(dic)
-    resultdict['code'] = 0
-    resultdict['msg'] = ""
-    resultdict['count'] = total
-    resultdict['data'] = dict
-    return JsonResponse(resultdict, safe=False)
-
+def container(request):
+    if request.session.get('is_login', None):
+        if request.method == 'GET':
+            page = request.GET.get('page')
+            rows = request.GET.get('limit')
+            id = request.GET.get('id')
+            ip = EwsHost.objects.get(pk=id).ip
+            i = (int(page) - 1) * int(rows)
+            j = (int(page) - 1) * int(rows) + int(rows)
+            # 根据ip，调用docker engine api获取容器
+            client = docker.DockerClient(base_url='tcp://' + ip + ':2375')
+            containers = client.containers.list()
+            total = len(containers)
+            containers = containers[i:j]
+            resultdict = {}
+            dict = []
+            for cont in containers:
+                dic = {}
+                dic['short_id'] = cont.short_id
+                dic['name'] = cont.name
+                dic['status'] = cont.status
+                dict.append(dic)
+            resultdict['code'] = 0
+            resultdict['msg'] = ""
+            resultdict['count'] = total
+            resultdict['data'] = dict
+            return JsonResponse(resultdict, safe=False)
+        if request.method == 'DELETE':
+            id = QueryDict(request.body).get('id')
+            pass
 
 # 主机docker安装，卸载
 @csrf_exempt
@@ -251,19 +262,20 @@ def docker(request):
             remote_path = settings.DOCKER_REMOTE_PATH + settings.DOCKER_INSTALL_PKG
             try:
                 session = Centos7(host, port, user, password)
-                session.sftp_put(local_path,remote_path)
-                try:
-                    cmd = 'source ~/.bashrc; cd /' + settings.DOCKER_REMOTE_PATH + '/; tar zxf settings.DOCKER_INSTALL_PKG'
-                    session.ssh_cmd(cmd)
-                    try:
-                        cmd = 'source ~/.bashrc; cd /' + settings.DOCKER_REMOTE_PATH + '/ews/; bash install.sh'
-                        return HttpResponse(json.dumps({"status": 0}))  # 安装成功
-                    except  Exception as ex:
-                        return HttpResponse(json.dumps({"status": 3}))  # 安装失败
-                except Exception as  ex:
-                    return HttpResponse(json.dumps({"status": 2}))  # 解压失败
+                if session.sftp_put(local_path, remote_path):  # docker安装包传输
+                    cmd1 = 'source ~/.bashrc; cd ' + settings.DOCKER_REMOTE_PATH + '; tar zxf ' + settings.DOCKER_INSTALL_PKG  # 解压安装包
+                    if session.ssh_cmd(cmd1):
+                        cmd2 = 'source ~/.bashrc; cd ' + settings.DOCKER_REMOTE_PATH + 'ews/; bash install.sh'  # 安装docker
+                        if session.ssh_cmd(cmd2):
+                            return HttpResponse(json.dumps({"status": 0}))  # 安装成功
+                        else:
+                            return HttpResponse(json.dumps({"status": 3}))  # 安装失败
+                    else:
+                        return HttpResponse(json.dumps({"status": 2}))  # 文件解压失败
+                else:
+                    return HttpResponse(json.dumps({"status": 1}))  # 文件传输失败
             except Exception as ex:
-                return HttpResponse(json.dumps({"status": 1}))  #  文件传输失败
+                return HttpResponse(json.dumps({"status": 4}))  # 程序性运行出错
 
 
 # 主机实时状态监控数据，写了暂时没用

@@ -5,9 +5,17 @@
 {% endblock %}
 
 {% block content %}
-    <div class="layui-main">
-        <table id="imagelist" lay-filter="image"></table>
+    <div class="" style="">
+        <div class="layui-breadcrumb" style="visibility: visible;">
+            <a href="{% url 'hosts:hostlist' %}">主机管理</a>
+            <a><cite>主机容器</cite></a>
+        </div>
     </div>
+    <div>
+        <table id="containerlist" lay-filter="container"></table>
+    </div>
+
+
 {% endblock %}
 {% block script %}
     <script type="text/html" id="barDemo">
@@ -31,8 +39,8 @@
 
             //方法级渲染
             table.render({
-                elem: '#imagelist', //指定原始表格元素选择器（推荐id选择器）
-                url: '{% url 'hosts:get_contaienrlist' %}?id=' + id,
+                elem: '#containerlist', //指定原始表格元素选择器（推荐id选择器）
+                url: '{% url 'hosts:container' %}?id=' + id,
                 method: 'get',
                 page: true, //分页
                 limit: 10,
@@ -50,7 +58,7 @@
             });
 
             //监听工具条
-            table.on('tool(image)', function (obj) { //注：tool是工具条事件名，host是table原始容器的属性 lay-filter="对应的值"
+            table.on('tool(container)', function (obj) { //注：tool是工具条事件名，host是table原始容器的属性 lay-filter="对应的值"
                 var data = obj.data; //获得当前行数据
                 var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
                 var tr = obj.tr; //获得当前行 tr 的DOM对象

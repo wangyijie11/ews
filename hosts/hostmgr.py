@@ -38,7 +38,7 @@ class Centos7(object):
             # 第一次ssh远程时会提示输入yes或者no
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             # 密码远程连接
-            ssh.connect(hostname=self.host, port=self.port, username=self.user, password=self.password, timeout=5)
+            ssh.connect(hostname=str(self.host), port=self.port, username=self.user, password=self.password, timeout=5)
             # 秘钥对远程连接
             # key_file = paramiko.RSAKey.from_private_key_file("/root/.ssh/id_rsa")
             # ssh.connect(hostname=self.host, port=self.port, username=self.user, pkey=key_file, timeout=5)
@@ -95,21 +95,32 @@ class Centos7(object):
     # 执行命令
     def ssh_cmd(self, cmd):
         client = self.connect()
-        stdin, stdout, stderr = client.exec_command(cmd)
-        result = stdout.read()
-        return result
+        try:
+            stdin, stdout, stderr = client.exec_command(cmd)
+            str_out = stdout.read().decode()
+            str_err = stderr.read().decode()
+            if str_err != "":
+                return False
+            else:
+                return str_out
+        except Exception as ex:
+            return ex
 
     # 传文件
     def sftp_put(self, local_path, remote_path):
-        transport = paramiko.Transport((self.host, self.port))
-        transport.connect(username=self.user, password=self.password)
-        sftp = paramiko.SFTPClient.from_transport(transport)
-        # 上传
-        sftp.put(local_path, remote_path)
-        transport.close()
+        try:
+            transport = paramiko.Transport((str(self.host), self.port))
+            transport.connect(username=self.user, password=self.password)
+            sftp = paramiko.SFTPClient.from_transport(transport)
+            # 上传
+            sftp.put(local_path, remote_path)
+            transport.close()
+            return True
+        except Exception as ex:
+            return False
 
     def sftp_get(self, local_path, remote_path):
-        transport = paramiko.Transport((self.host, self.port))
+        transport = paramiko.Transport((str(self.host), self.port))
         transport.connect(username=self.user, password=self.password)
         sftp = paramiko.SFTPClient.from_transport(transport)
         # 下载

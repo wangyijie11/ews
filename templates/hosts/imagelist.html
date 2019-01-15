@@ -5,9 +5,17 @@
 {% endblock %}
 
 {% block content %}
-    <div class="layui-main">
+
+    <div class="" style="">
+        <div class="layui-breadcrumb" style="visibility: visible;">
+            <a href="{% url 'hosts:hostlist' %}">主机管理</a>
+            <a><cite>主机镜像</cite></a>
+        </div>
+    </div>
+    <div>
         <table id="imagelist" lay-filter="image"></table>
     </div>
+
 {% endblock %}
 {% block script %}
     <script type="text/html" id="barDemo">
@@ -32,7 +40,7 @@
             //方法级渲染
             table.render({
                 elem: '#imagelist', //指定原始表格元素选择器（推荐id选择器）
-                url: '{% url 'hosts:get_imagelist' %}?id=' + id,
+                url: '{% url 'hosts:image' %}?id=' + id,
                 method: 'get',
                 page: true, //分页
                 limit: 10,
