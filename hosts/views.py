@@ -7,9 +7,10 @@ import json
 from . import models
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from hosts.models import EwsHost
+from hosts.models import EwsHost, EwsFirewall
 from django.contrib.auth.models import User, Group
 import docker
+from docker import DockerClient
 from hosts.hostmgr import Centos7
 import paramiko
 import time
@@ -26,7 +27,7 @@ def hostlist(request):
         return redirect('/login/')
 
 
-def firewall(request):
+def firewalllist(request):
     is_login = request.session.get('is_login', False)  # 获取session里的值
     if is_login:
         ews_account = request.session.get('ews_account')
@@ -53,6 +54,15 @@ def containerlist(request):
         return redirect('/login/')
 
 
+def containerlog(request):
+    is_login = request.session.get('is_login', False)  # 获取session里的值
+    if is_login:
+        ews_account = request.session.get('ews_account')
+        return render(request, 'hosts/containerlogs.html', {'ews_account': ews_account})
+    else:
+        return redirect('/login/')
+
+
 # 远程获取主机信息
 def get_hostinfo(host, port, user, password):
     session = Centos7(host, port, user, password)  # 类Centos7的connect方法需要改成ssh连接
@@ -66,8 +76,7 @@ def get_hostinfo(host, port, user, password):
         data = {'hostname': hostname, 'cpuinfo': cpuinfo, 'memory': memory, 'version': version, 'disk': disk}
         return data
     elif state == 'Down':
-      return False
-
+        return False
 
 
 # 主机GET/POST，添加主机、删除主机、获取主机信息
@@ -131,7 +140,7 @@ def host(request):
                 hosts = Group.objects.get(pk=g.id).ewshost_set.all()
                 for h in hosts:
                     # 获取主机动态状态
-                    session = Centos7(h.ip, h.ssh_port, h.ssh_user, h.ssh_password)  # 类Centos7的connect方法需要改成ssh连接
+                    # session = Centos7(h.ip, h.ssh_port, h.ssh_user, h.ssh_password)  # 类Centos7的connect方法需要改成ssh连接
                     #state = session.get_state()
                     # 查询太慢，先注释
                     #cpu_state = session.get_cpustate()
@@ -179,72 +188,109 @@ def post_desc(request):
                 return HttpResponse(json.dumps({"status": 1}))
 
 
-# 获取镜像列表
+# 镜像GET/DELETE
 @csrf_exempt
 def image(request):
     if request.session.get('is_login', None):
         if request.method == 'GET':
             page = request.GET.get('page')
             rows = request.GET.get('limit')
-            id = request.GET.get('id')
+            id = request.GET.get('hostid')
+            imageid = request.GET.get('imageid')
             ip = EwsHost.objects.get(pk=id).ip
-            i = (int(page) - 1) * int(rows)
-            j = (int(page) - 1) * int(rows) + int(rows)
-            # 根据ip，调用docker engine api获取镜像
-            client = docker.DockerClient(base_url='tcp://' + ip + ':2375')
-            images = client.images.list()
-            total = len(images)
-            images = images[i:j]
-            resultdict = {}
-            dict = []
-            for img in images:
-                dic = {}
-                dic['short_id'] = img.short_id
-                dic['repotag'] = img.attrs.get('RepoTags')
-                dict.append(dic)
-            resultdict['code'] = 0
-            resultdict['msg'] = ""
-            resultdict['count'] = total
-            resultdict['data'] = dict
-            return JsonResponse(resultdict, safe=False)
+            if imageid:
+                try:
+                    client = DockerClient(base_url='tcp://' + ip + ':2375')
+                    imageinfo = client.images.get(imageid).attrs
+                    return HttpResponse(json.dumps(imageinfo))
+                except Exception as ex:
+                    return HttpResponse(json.dumps({"API调用异常"}))
+            elif not imageid:
+                i = (int(page) - 1) * int(rows)
+                j = (int(page) - 1) * int(rows) + int(rows)
+                # 根据ip，调用docker engine api获取镜像
+                client = DockerClient(base_url='tcp://' + ip + ':2375')
+                images = client.images.list()
+                total = len(images)
+                images = images[i:j]
+                resultdict = {}
+                dict = []
+                for img in images:
+                    dic = {}
+                    dic['short_id'] = img.short_id
+                    dic['repotag'] = img.attrs.get('RepoTags')
+                    dict.append(dic)
+                resultdict['code'] = 0
+                resultdict['msg'] = ""
+                resultdict['count'] = total
+                resultdict['data'] = dict
+                return JsonResponse(resultdict, safe=False)
         if request.method == 'DELETE':
-            id = QueryDict(request.body).get('id')
-            pass
+            imageid = QueryDict(request.body).get('imageid')
+            hostid = QueryDict(request.body).get('hostid')
+            ip = EwsHost.objects.get(pk=hostid).ip
+            if (not imageid) or (not ip):
+                return HttpResponse(json.dumps({"status": 2, "msg": "缺少变量imageid和hostid"}))
+            try:
+                client = DockerClient(base_url='tcp://' + ip + ':2375')
+                client.images.remove(imageid, force=True)
+                return HttpResponse(json.dumps({"status": 0}))
+            except Exception as ex:
+                return HttpResponse(json.dumps({"status": 1, "msg": "API调用异常"}))
 
 
-
-# 获取容器列表
+# 容器GET/DELETE
 @csrf_exempt
 def container(request):
     if request.session.get('is_login', None):
         if request.method == 'GET':
             page = request.GET.get('page')
             rows = request.GET.get('limit')
-            id = request.GET.get('id')
-            ip = EwsHost.objects.get(pk=id).ip
-            i = (int(page) - 1) * int(rows)
-            j = (int(page) - 1) * int(rows) + int(rows)
-            # 根据ip，调用docker engine api获取容器
-            client = docker.DockerClient(base_url='tcp://' + ip + ':2375')
-            containers = client.containers.list()
-            total = len(containers)
-            containers = containers[i:j]
-            resultdict = {}
-            dict = []
-            for cont in containers:
-                dic = {}
-                dic['short_id'] = cont.short_id
-                dic['name'] = cont.name
-                dic['status'] = cont.status
-                dict.append(dic)
-            resultdict['code'] = 0
-            resultdict['msg'] = ""
-            resultdict['count'] = total
-            resultdict['data'] = dict
-            return JsonResponse(resultdict, safe=False)
+            hostid = request.GET.get('hostid')
+            containerid = request.GET.get('containerid')
+            ip = EwsHost.objects.get(pk=hostid).ip
+            if containerid:
+                try:
+                    client = DockerClient(base_url='tcp://' + ip + ':2375')
+                    containerinfo = client.containers.get(containerid).attrs
+                    return HttpResponse(json.dumps(containerinfo))
+                except Exception as ex:
+                    return HttpResponse(json.dumps({"API调用异常"}))
+            elif not containerid:
+                i = (int(page) - 1) * int(rows)
+                j = (int(page) - 1) * int(rows) + int(rows)
+                # 根据ip，调用docker engine api获取容器
+                client = DockerClient(base_url='tcp://' + ip + ':2375')
+                containers = client.containers.list(all=True)
+                total = len(containers)
+                containers = containers[i:j]
+                resultdict = {}
+                dict = []
+                for cont in containers:
+                    dic = {}
+                    dic['short_id'] = cont.short_id
+                    dic['name'] = cont.name
+                    dic['status'] = cont.status
+                    dict.append(dic)
+                resultdict['code'] = 0
+                resultdict['msg'] = ""
+                resultdict['count'] = total
+                resultdict['data'] = dict
+                return JsonResponse(resultdict, safe=False)
         if request.method == 'DELETE':
-            id = QueryDict(request.body).get('id')
-            pass
+            containerid = QueryDict(request.body).get('containerid')
+            hostid = QueryDict(request.body).get('hostid')
+            ip = EwsHost.objects.get(pk=hostid).ip
+            if (not containerid) or (not ip):
+                return HttpResponse(json.dumps({"status": 2, "msg": "缺少变量containerid和hostid"}))
+            try:
+                client = DockerClient(base_url='tcp://' + ip + ':2375')
+                containerins = client.containers.get(containerid)
+                containerins.remove(v=True, force=True)
+                return HttpResponse(json.dumps({"status": 0}))
+            except Exception as ex:
+                return HttpResponse(json.dumps({"status": 1, "msg": "API调用异常"}))
+
 
 # 主机docker安装，卸载
 @csrf_exempt
@@ -278,7 +324,40 @@ def docker(request):
                 return HttpResponse(json.dumps({"status": 4}))  # 程序性运行出错
 
 
-# 主机实时状态监控数据，写了暂时没用
+@csrf_exempt
+def firewall(request):
+    if request.session.get('is_login', None):
+        ews_accountid = request.session.get('ews_accountid')
+        if request.method == 'GET':
+
+            groups = User.objects.get(pk=ews_accountid).groups.all()
+            page = request.GET.get('page')
+            rows = request.GET.get('limit')
+            i = (int(page) - 1) * int(rows)
+            j = (int(page) - 1) * int(rows) + int(rows)
+            result = {}
+            dict = []
+            for g in groups:
+                policies = Group.objects.get(pk=g.id).ewsfirewall_set.all()
+                for p in policies:
+                    dic = {}
+                    dic['policy_id'] = p.id
+                    dic['policy_name'] = p.policy_name
+                    dic['policy_json'] = p.policy_json
+                    dic['kind'] = p.kind
+                    dic['created_time'] = p.created_time
+                    dic['count'] = EwsFirewall.objects.get(pk=p.id).ewshostfirewall_set.all().count()
+                    dic['iscustomize'] = p.iscustomize
+                    dict.append(dic)
+            total = len(dict)
+            dict = dict[i:j]
+            result['code'] = 0
+            result['msg'] = ""
+            result['count'] = total
+            result['data'] = dict
+            return JsonResponse(result, safe=False)
+
+# 主机状态 异步刷新，写了暂时没用
 @csrf_exempt
 def hostmonitor(request):
     if request.session.get('is_login', None):

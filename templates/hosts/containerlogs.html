@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>CONT CLOUD</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="icon" href="/static/img/logo.png" type="image/png" />
+</head>
+<body>
+
+<div style="padding-left: 200px; padding-right: 200px">
+    <div class="layui-bg-black">
+        <div id="log">
+
+        </div>
+    </div>
+</div>
+</body>
+
+<script type="text/javascript" src="/static/js/jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="/static/js/jquery.cookie.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+    function getQueryString(name) {
+        var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+        var r = window.location.search.substr(1).match(reg);
+        if (r != null) return unescape(r[2]);
+        return null;
+    }
+
+    layui.use(['jquery','layer'], function () {
+        var $ = layui.jquery,
+            layer = layui.layer,
+            hostid = getQueryString("hostid"),
+            containerid = getQueryString("containerid");
+        $.ajax({
+            url: '{% url 'docker:container_logs' %}',
+            type: "post",
+            data: {"containerid": containerid, "hostid": hostid},
+            success: function (data) {
+                data = JSON.parse(data);
+                if (data['status'] == 0) {
+                    $("#log").append(data['data']);
+                } else if (data['status'] == 1) {
+                    layer.msg(data['msg'])
+                } else if (data['status'] == 2) {
+                    layer.msg(data['msg']);
+                } else {
+                    layer.msg(data['msg']);
+                }
+            }
+        })
+    })
+
+</script>
+</html>

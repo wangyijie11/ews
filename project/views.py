@@ -242,11 +242,12 @@ def compose(request):
                 try:
                     result = {}
                     dict = []
-                    projects = Group.objects.get(pk=g.id).ewsproject_set.all()
-                    for p in projects:
-                        data = get_compose_byproject(p.id)
-                        if len(data) != 0 :
-                            dict = dict + data
+                    for g in groups:
+                        projects = Group.objects.get(pk=g.id).ewsproject_set.all()
+                        for p in projects:
+                            data = get_compose_byproject(p.id)
+                            if len(data) != 0 :
+                                dict = dict + data
                     result['code'] = 0
                     result['msg'] = ""
                     result['count'] = len(dict)

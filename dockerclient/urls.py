@@ -13,21 +13,15 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path
-from django.conf.urls import include
-from django.conf.urls import url
-from users import views
 
+from django.conf.urls import url
+from dockerclient import views
+
+app_name = 'docker'
 urlpatterns = [
-    url(r'^dashboard/', views.dashboard, name='dashboard'),
-    url(r'^login/', views.login, name='login'),
-    url(r'^logout/', views.logout, name='logout'),
-    url(r'^$', views.dashboard, name="index"),
-    path('admin/', admin.site.urls),
-    path('hosts/', include('hosts.urls')),
-    path('users/', include('users.urls')),
-    path('repository/', include('repository.urls')),
-    path('project/', include('project.urls')),
-    path('docker/', include('dockerclient.urls')),
+    url(r'^container/run/', views.container_run, name='container_run'),
+    url(r'^container/start/', views.container_start, name='container_start'),
+    url(r'^container/stop/', views.container_stop, name='container_stop'),
+    url(r'^container/restart/', views.container_restart, name='container_restart'),
+    url(r'^container/logs/', views.container_logs, name='container_logs'),
 ]

@@ -5,10 +5,12 @@
 {% endblock %}
 
 {% block content %}
-    <div class="" style="">
-        <div class="layui-breadcrumb" style="visibility: visible;">
-            <a href="{% url 'hosts:hostlist' %}">主机管理</a>
-            <a><cite>主机容器</cite></a>
+    <div class="layui-row">
+        <div class="layui-col-xs4 layui-breadcrumb" style="visibility: visible; padding: 10px 10px 0px 10px; line-height:28px;">
+            <div class="grid-demo">
+                <a href="{% url 'hosts:hostlist' %}">主机管理</a>
+                <a><cite>容器</cite></a>
+            </div>
         </div>
     </div>
     <div>
@@ -19,6 +21,10 @@
 {% endblock %}
 {% block script %}
     <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-xs" lay-event="start">启动</a>
+        <a class="layui-btn layui-btn-xs" lay-event="stop">停止</a>
+        <a class="layui-btn layui-btn-xs" lay-event="restart">重启</a>
+        <a class="layui-btn layui-btn-xs" lay-event="logs">日志</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </script>
 
@@ -35,12 +41,12 @@
                 layer = layui.layer,
                 form = layui.form,
                 $ = layui.jquery,
-                id = getQueryString("id")
+                id = getQueryString("id");
 
             //方法级渲染
             table.render({
                 elem: '#containerlist', //指定原始表格元素选择器（推荐id选择器）
-                url: '{% url 'hosts:container' %}?id=' + id,
+                url: '{% url 'hosts:container' %}?hostid=' + id,
                 method: 'get',
                 page: true, //分页
                 limit: 10,
@@ -51,8 +57,8 @@
                     {checkbox: true, fixed: true},
                     {field: 'short_id', title: '容器ID', width: '20%'},
                     {field: 'name', title: '容器名', width: '30%'},
-                    {field: 'status', title: '状态', width: '26%'},
-                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '20%'},
+                    {field: 'status', title: '状态', width: '16%'},
+                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '30%'},
                 ]],
 
             });
@@ -65,12 +71,123 @@
 
                 if (layEvent === 'del') { //删除
                     layer.confirm('确认删除？', function (index) {
-                        obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
-                        layer.close(index);
+                        var containerid = data['short_id'];
                         //向服务端发送删除指令
+                        $.ajax({
+                            url: '{% url 'hosts:container' %}',
+                            type: "delete",
+                            data: {"containerid": containerid, "hostid": id},
+                            success: function (data) {
+                                data = JSON.parse(data);
+                                if (data["status"] == 0) {
+                                    layer.close(index);
+                                    obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                                    layer.msg('删除成功');
+                                } else if (data["status"] == 1) {
+                                    layer.msg('删除失败');
+                                } else if (data["status"] == 2) {
+                                    layer.msg('获取主机ID和容器ID失败');
+                                } else {
+                                    layer.msg('运行异常');
+                                }
+                            }
+                        });
+
                     });
+                } else if (layEvent == 'start') { // 启动
+                    var containerid = data['short_id'];
+                    $.ajax({
+                        url: '{% url 'docker:container_start' %}',
+                        type: "post",
+                        data: {"containerid": containerid, "hostid": id},
+                        success: function (data) {
+                            data = JSON.parse(data);
+                            if (data["status"] == 0) {
+                                obj.update({"status": "running"});
+                                layer.msg('启动成功');
+                            } else if (data["status"] == 1) {
+                                obj.update({"status": "exited"});
+                                layer.msg('启动失败')
+                            } else if (data["status"] == 2) {
+                                layer.msg('获取主机ID和容器ID失败');
+                            } else {
+                                layer.msg('运行异常');
+                            }
+                        }
+                    })
+                } else if (layEvent == 'stop') { // 启动
+                    var containerid = data['short_id'];
+                    $.ajax({
+                        url: '{% url 'docker:container_stop' %}',
+                        type: "post",
+                        data: {"containerid": containerid, "hostid": id},
+                        success: function (data) {
+                            data = JSON.parse(data);
+                            if (data["status"] == 0) {
+                                obj.update({"status": "exited"});
+                                layer.msg('停止成功');
+                            } else if (data["status"] == 1) {
+                                obj.update({"status": "exited"});
+                                layer.msg('停止失败')
+                            } else if (data["status"] == 2) {
+                                layer.msg('获取主机ID和容器ID失败');
+                            } else {
+                                layer.msg('运行异常');
+                            }
+                        }
+                    })
+                } else if (layEvent == 'restart') { // 启动
+                    var containerid = data['short_id'];
+                    $.ajax({
+                        url: '{% url 'docker:container_restart' %}',
+                        type: "post",
+                        data: {"containerid": containerid, "hostid": id},
+                        success: function (data) {
+                            data = JSON.parse(data);
+                            if (data["status"] == 0) {
+                                obj.update({"status": "running"});
+                                layer.msg('重启成功');
+                            } else if (data["status"] == 1) {
+                                obj.update({"status": "exited"});
+                                layer.msg('重启失败')
+                            } else if (data["status"] == 2) {
+                                layer.msg('获取主机ID和容器ID失败');
+                            } else {
+                                layer.msg('运行异常');
+                            }
+                        }
+                    })
+                } else if (layEvent == 'logs') { // 日志
+                    var containerid = data['short_id'];
+                    window.open('{% url 'hosts:containerlog' %}?hostid=' + id + '&containerid=' + containerid);
                 }
             });
+
+            //监听行单击事件
+            table.on('rowDouble(container)', function (obj) {
+                //console.log(obj.tr); //得到当前行元素对象
+                //console.log(obj.data) //得到当前行数据
+                //obj.del(); //删除当前行
+                //obj.update(fields) //修改当前行数据
+                var data = obj.data;
+                var containerid = data['short_id'];
+
+                $.ajax({
+                    url: '{% url 'hosts:container' %}?containerid='+ containerid + '&hostid=' + id,
+                    type: "get",
+                    success: function (data) {
+                        var resdata = JSON.parse(data);
+                        layer.alert(JSON.stringify(resdata, null, "\t"),{
+                            title: '当前行数据',
+                            //area: '500px',
+                        });
+                        //标注选中样式
+                        obj.tr.addClass('layui-table-click').siblings().removeClass('layui-table-click');
+                    }
+                });
+
+            });
+
         });
     </script>
 {% endblock %}

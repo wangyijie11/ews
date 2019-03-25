@@ -77,9 +77,9 @@
 
     </div>
 
-    <div class="" style="">
-        <div class="layui-breadcrumb" style="visibility: visible;">
-            <a><cite>主机管理</cite></a>
+    <div class="layui-row">
+        <div class="layui-col-xs4 layui-breadcrumb" style="visibility: visible; padding: 10px 10px 0px 10px; line-height:28px;">
+            <div class="grid-demo"><a><cite>主机管理</cite></a></div>
         </div>
     </div>
     <div>
@@ -94,6 +94,8 @@
 {% block script %}
     //数据行操作按钮
     <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-xs" lay-event="firewall">防火墙</a>
+        <a class="layui-btn layui-btn-xs" lay-event="fabric">fabric</a>
         <a class="layui-btn layui-btn-xs" lay-event="docker">docker</a>
         <a class="layui-btn layui-btn-xs" lay-event="container">容器</a>
         <a class="layui-btn layui-btn-xs" lay-event="image">镜像</a>
@@ -130,13 +132,13 @@
                 cols: [[
                     {checkbox: true},
                     {field: 'id', title: 'ID', width: '10%'},
-                    {field: 'ip', title: 'IP', width: '15%'},
-                    {field: 'state', title: '状态', width: '8%'},
-                    {field: 'cpu_state', title: 'CPU', width: '10%'},
-                    {field: 'memory_state', title: '内存', width: '8%'},
-                    {field: 'disk_state', title: '磁盘', width: '10%'},
-                    {field: 'tab_groupname', title: '组', width: '10%'},
-                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '25%'},
+                    {field: 'ip', title: 'IP', width: '20%'},
+                    {field: 'state', title: '状态', width: '10%'},
+                    //{field: 'cpu_state', title: 'CPU', width: '10%'},
+                    //{field: 'memory_state', title: '内存', width: '8%'},
+                    //{field: 'disk_state', title: '磁盘', width: '10%'},
+                    {field: 'tab_groupname', title: '组', width: '20%'},
+                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '36%'},
                 ]],
             });
 
@@ -153,7 +155,7 @@
                     window.location.href = "{% url 'hosts:imagelist' %}?id=" + data.id
                 } else if (layEvent === 'del') { //删除
                     layer.confirm('确认删除？', function (index) {
-                        id = data['id']
+                        var id = data['id'];
                         obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
                         //向服务端发送删除指令
                         $.ajax({

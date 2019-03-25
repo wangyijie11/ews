@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'users',
     'repository',
     'project',
+    'dockerclient',
+    'registryclient',
 ]
 
 MIDDLEWARE = [
