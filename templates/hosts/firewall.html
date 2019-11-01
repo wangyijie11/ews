@@ -6,11 +6,18 @@
 
 {% block content %}
     <!--新建防火墙规则表单-->
-    <div class="layui-row" id="addfirewall" style="display:none;">
+    <div class="layui-row" id="addport" style="display:none;">
         <div class="layui-col-md12">
             <form class="layui-form">
                 {% csrf_token %}
                 <br>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">策略：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="policy" class="layui-input" lay-verify="required" placeholder="防火墙策略说明">
+                    </div>
+                </div>
+
                 <div class="layui-form-item">
                     <label class="layui-form-label">端口：</label>
                     <div class="layui-input-inline">
@@ -36,6 +43,62 @@
         </div>
     </div>
 
+        <!--新建防火墙规则表单，富规则-->
+    <div class="layui-row" id="addrich" style="display:none;">
+        <div class="layui-col-md12">
+            <form class="layui-form">
+                {% csrf_token %}
+                <br>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">策略：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="policy" class="layui-input" lay-verify="required" placeholder="防火墙策略说明">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">源地址：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="sourceip" class="layui-input" lay-verify="required" placeholder="eg: 172.16.1.1">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">目标端口：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="destinationport" class="layui-input" lay-verify="required" placeholder="eg: 80、8080-8090">
+                    </div>
+                </div>
+
+                 <div class="layui-form-item">
+                    <label class="layui-form-label">允许：</label>
+                    <div class="layui-input-inline">
+                        <select name="isallow" class="layui-input" lay-verify="required">
+                            <option value="True" selected>是</option>
+                            <option value="False">否</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">团队：</label>
+                    <div class="layui-input-inline">
+                        <select name="groupname" id="groupSelect-2" class="layui-input" lay-verify="required">
+
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                        <button lay-submit class="layui-btn layui-btn-normal" lay-filter="richcommit">确认</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <div class="layui-row">
         <div class="layui-col-xs4 layui-breadcrumb" style="visibility: visible; padding: 10px 10px 0px 10px; line-height:28px;">
             <div class="grid-demo">
@@ -52,7 +115,8 @@
     //批量操作按钮
     <script type="text/html" id="toolbarDemo">
         <div class="layui-btn-container">
-            <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+            <button class="layui-btn layui-btn-sm" lay-event="add-port">添加端口</button>
+            <button class="layui-btn layui-btn-sm" lay-event="add-rich">添加富规则</button>
             <button class="layui-btn layui-btn-sm" lay-event="delete">删除</button>
         </div>
     </script>
@@ -116,7 +180,7 @@
             table.on('toolbar(firewall)', function (obj) {
                 var checkStatus = table.checkStatus(obj.config.id);
                 switch (obj.event) {
-                    case 'add':
+                    case 'add-port':
                         var url = '{% url 'users:get_grouplist' %}';
                         $.get(url, function (result) {
                             var groups = result.data;
@@ -128,13 +192,34 @@
                             layer.open({
                                 type: 1,
                                 title: "新建防火墙策略",
-                                area: ['350px', '250px'],
-                                content: $('#addfirewall').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
+                                area: ['350px', '300px'],
+                                content: $('#addport').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
                             });
                             /* 渲染表单 */
                             form.render();
                         });
                         break;
+
+                        case 'add-rich':
+                        var url = '{% url 'users:get_grouplist' %}';
+                        $.get(url, function (result) {
+                            var groups = result.data;
+                            var groupSelect = $("#groupSelect-2");
+                            $.each(groups, function (index, data) {
+                                var groupOption = $("<option value='" + data.id + "'>" + data.groupname + "</option>");
+                                groupSelect.append(groupOption);
+                            });
+                            layer.open({
+                                type: 1,
+                                title: "新建防火墙策略",
+                                area: ['350px', '450px'],
+                                content: $('#addrich').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
+                            });
+                            /* 渲染表单 */
+                            form.render();
+                        });
+                        break;
+
                     case 'delete':
                         layer.confirm();
                         break;
@@ -147,7 +232,7 @@
              // 新建防火墙策略提交表单
             form.on('submit(firewallcommit)',function (data) {
                 $.post({
-                    url: '{% url 'hosts:host' %}',
+                    url: '{% url 'hosts:firewallport' %}',
                     data: data.field,
                     success:function (data) {
                         data = JSON.parse(data);
@@ -165,6 +250,26 @@
                 return false;
             });
 
+             // 新建防火墙策略提交表单，富规则
+            form.on('submit(richcommit)',function (data) {
+                $.post({
+                    url: '{% url 'hosts:firewallrich' %}',
+                    data: data.field,
+                    success:function (data) {
+                        data = JSON.parse(data);
+                        if (data["status"] == 0){
+                            layer.msg('新建成功');
+                            layer.close(layui.index);
+                            location.reload();
+                        } else if (data["status"] == 1){
+                            layer.msg('新建失败');
+                        } else {
+                            layer.msg('运行异常');
+                        }
+                    }
+                });
+                return false;
+            });
         });
     </script>
 {% endblock %}

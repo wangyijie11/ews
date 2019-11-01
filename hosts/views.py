@@ -140,8 +140,8 @@ def host(request):
                 hosts = Group.objects.get(pk=g.id).ewshost_set.all()
                 for h in hosts:
                     # 获取主机动态状态
-                    # session = Centos7(h.ip, h.ssh_port, h.ssh_user, h.ssh_password)  # 类Centos7的connect方法需要改成ssh连接
-                    #state = session.get_state()
+                    session = Centos7(h.ip, h.ssh_port, h.ssh_user, h.ssh_password)  # 类Centos7的connect方法需要改成ssh连接
+                    state = session.get_state()
                     # 查询太慢，先注释
                     #cpu_state = session.get_cpustate()
                     #memory_state = session.get_memorystate()
@@ -160,7 +160,7 @@ def host(request):
                     dic['tab_user_id'] = h.tab_user_id
                     dic['tab_group_id'] = h.tab_group_id
                     dic['tab_groupname'] = Group.objects.get(pk=h.tab_group_id).name
-                    #dic['state'] = state
+                    dic['state'] = state
                     #dic['cpu_state'] = cpu_state
                     #dic['memory_state'] = memory_state
                     #dic['disk_state'] = disk_state
@@ -356,6 +356,70 @@ def firewall(request):
             result['count'] = total
             result['data'] = dict
             return JsonResponse(result, safe=False)
+
+#添加防火墙端口开放规则
+@csrf_exempt
+def firewallport(request):
+    if request.session.get('is_login', None):
+        if request.method == 'POST':
+            ews_accountid = request.session.get('ews_accountid')
+            ews_groupid = request.POST.get('groupname')
+            port = request.POST.get('port')
+            policy = request.POST.get('policy')
+            zone = request.POST.get('zone')
+            default_zone = 'public'
+            kind = 'port'
+            if not zone:
+                zone = default_zone
+
+            try:
+                policy_json = {"zone": zone, "kind": kind, "ports": port}
+                new_policy = models.EwsFirewall()
+                new_policy.kind = kind
+                new_policy.policy_name = policy
+                new_policy.policy_json = policy_json
+                new_policy.created_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                new_policy.tab_group_id = ews_groupid
+                new_policy.tab_user_id = ews_accountid
+                new_policy.iscustomize = 0
+                new_policy.save()
+                return HttpResponse(json.dumps({"status": 0}))
+
+            except Exception as ex:
+                return HttpResponse(json.dumps({"status": 1}))
+
+# 添加防火墙端口开放富规则
+@csrf_exempt
+def firewallrich(request):
+    if request.session.get('is_login', None):
+        if request.method == 'POST':
+            ews_accountid = request.session.get('ews_accountid')
+            ews_groupid = request.POST.get('groupname')
+            sourceip = request.POST.get('sourceip')
+            destinationport = request.POST.get('destinationport')
+            isallow = request.POST.get('isallow')
+            policy = request.POST.get('policy')
+            zone = request.POST.get('zone')
+            default_zone = 'public'
+            kind = 'rich'
+            if not zone:
+                zone = default_zone
+
+            try:
+                policy_json = {"zone": zone, "kind": kind, "rule": {"rule family": "ipv4", "source address": sourceip, "port port": destinationport, "protocol": "tcp", "accept": isallow}}
+                new_policy = models.EwsFirewall()
+                new_policy.kind = kind
+                new_policy.policy_name = policy
+                new_policy.policy_json = policy_json
+                new_policy.created_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                new_policy.tab_group_id = ews_groupid
+                new_policy.tab_user_id = ews_accountid
+                new_policy.iscustomize = 0
+                new_policy.save()
+                return HttpResponse(json.dumps({"status": 0}))
+
+            except Exception as ex:
+                return HttpResponse(json.dumps({"status": 1}))
 
 # 主机状态 异步刷新，写了暂时没用
 @csrf_exempt
