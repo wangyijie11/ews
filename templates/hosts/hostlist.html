@@ -155,7 +155,7 @@
                 } else if (layEvent === 'del') { //删除
                     layer.confirm('确认删除？', function (index) {
                         var id = data['id'];
-                        obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+
                         //向服务端发送删除指令
                         $.ajax({
                             url: '{% url 'hosts:host' %}',
@@ -166,6 +166,7 @@
                                 if (data["status"] == 0) {
                                     layer.closeAll();
                                     layer.msg('删除成功');
+                                    obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
                                 } else if (data["status"] == 1) {
                                     layer.msg('删除失败');
                                 } else if (data["status"] == 2) {

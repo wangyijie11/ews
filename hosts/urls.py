@@ -29,6 +29,9 @@ urlpatterns = [
     url(r'^image/', views.image, name='image'),
     url(r'^container/', views.container, name='container'),
     url(r'^host/', views.host, name='host'),
+    url(r'^get_hostip/', views.get_hostip, name='get_hostip'),
+    url(r'^applypolicy/', views.applypolicy, name='applypolicy'),
+
     url(r'^post_desc/', views.post_desc, name='post_desc'),
     url(r'^docker/', views.docker, name='docker'),
     url(r'^hostmonitor/', views.hostmonitor, name='hostmonitor'),

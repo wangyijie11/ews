@@ -78,13 +78,47 @@ def get_hostinfo(host, port, user, password):
     elif state == 'Down':
         return False
 
+# 获取主机IP地址
+@csrf_exempt
+def get_hostip(request):
+    if request.session.get('is_login', None):
+        ews_accountid = request.session.get('ews_accountid')
+        if request.method == 'GET':
+            groups = User.objects.get(pk=ews_accountid).groups.all()
+            result = {}
+            dict = []
+            for g in groups:
+                hosts = Group.objects.get(pk=g.id).ewshost_set.all()
+                for h in hosts:
+                    dic = {}
+                    dic['id'] = h.id
+                    dic['ip'] = h.ip
+                    dict.append(dic)
+            total = len(dict)
+            result['code'] = 0
+            result['msg'] = ""
+            result['count'] = total
+            result['data'] = dict
+            return JsonResponse(result, safe=False)
+
+
+# 部署防火墙策略至主机
+@csrf_exempt
+def applypolicy(request):
+    pass
+    if request.session.get('is_login', None):
+        ews_accountid = request.session.get('ews_accountid')
+        if request.method == 'POST':
+            pass
+        if request.method == 'DELETE':
+            pass
+
 
 # 主机GET/POST，添加主机、删除主机、获取主机信息
 @csrf_exempt
 def host(request):
     if request.session.get('is_login', None):
         ews_accountid = request.session.get('ews_accountid')
-
         if request.method == 'POST':
             host = request.POST.get('host')
             port = request.POST.get('port')
@@ -140,8 +174,8 @@ def host(request):
                 hosts = Group.objects.get(pk=g.id).ewshost_set.all()
                 for h in hosts:
                     # 获取主机动态状态
-                    session = Centos7(h.ip, h.ssh_port, h.ssh_user, h.ssh_password)  # 类Centos7的connect方法需要改成ssh连接
-                    state = session.get_state()
+                    #session = Centos7(h.ip, h.ssh_port, h.ssh_user, h.ssh_password)  # 类Centos7的connect方法需要改成ssh连接
+                    #state = session.get_state()
                     # 查询太慢，先注释
                     #cpu_state = session.get_cpustate()
                     #memory_state = session.get_memorystate()
@@ -160,7 +194,7 @@ def host(request):
                     dic['tab_user_id'] = h.tab_user_id
                     dic['tab_group_id'] = h.tab_group_id
                     dic['tab_groupname'] = Group.objects.get(pk=h.tab_group_id).name
-                    dic['state'] = state
+                    dic['state'] = 'N/A'
                     #dic['cpu_state'] = cpu_state
                     #dic['memory_state'] = memory_state
                     #dic['disk_state'] = disk_state
@@ -356,6 +390,16 @@ def firewall(request):
             result['count'] = total
             result['data'] = dict
             return JsonResponse(result, safe=False)
+        if request.method == 'DELETE':
+            id = QueryDict(request.body).get('id')
+            try:
+                if any(id):
+                    EwsFirewall.objects.filter(pk=id).delete()
+                    return HttpResponse(json.dumps({"status": 0}))
+                else:
+                    return HttpResponse(json.dumps({"status": 1}))
+            except Exception as ex:
+                return HttpResponse(json.dumps({"status": 2}))
 
 #添加防火墙端口开放规则
 @csrf_exempt
