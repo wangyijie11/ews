@@ -105,11 +105,70 @@ def get_hostip(request):
 # 部署防火墙策略至主机
 @csrf_exempt
 def applypolicy(request):
-    pass
     if request.session.get('is_login', None):
         ews_accountid = request.session.get('ews_accountid')
         if request.method == 'POST':
-            pass
+            host_id = request.POST.get('host')
+            policy_id = request.POST.get('policy')
+            try:
+                if id:
+                    host = EwsHost.objects.get(pk=host_id)
+                    ssh_password = host.ssh_password
+                    ssh_user = host.ssh_user
+                    ssh_port = host.ssh_port
+
+                    session = Centos7(host, ssh_port, ssh_user, ssh_password)  # 类Centos7的connect方法需要改成ssh连接
+                    state = session.get_state()
+                    if state == 'Up':
+                        policy = EwsFirewall.objects.get(pk=policy_id)
+                        policy_str = policy.policy_json
+                        policy_json = json.loads(policy_str)
+                        zone = policy_json['zone']
+                        kind = policy_json['kind']
+                        if kind == 'rich':
+                            rule = policy_json['rule']
+                            rule_family = policy_json['rule']['rule family']
+                            source_address = policy_json['rule']['source address']
+                            port = policy_json['rule']['port port']
+                            protocol = policy_json['rule']['protocol']
+                            accept = policy_json['rule']['accept']
+                            if accept == 'True':
+                                accept = 'accept'
+                            cmd1 = 'firewall-cmd --permanent --zone=' + zone + ' --add-rich-rule=\'rule family=' + rule_family + ' source address=' + source_address + ' port port=' + port + ' protocol=' + protocol + ' ' + accept + '\''
+                            cmd2 = 'firewall-cmd --reload'
+                            if session.ssh_cmd(cmd1):
+                                if session.ssh_cmd(cmd2):
+                                    return HttpResponse(json.dumps({"status": 0}))
+                                else:
+                                    # 命令执行失败
+                                    return HttpResponse(json.dumps({"status": 4}))
+                            else:
+                                # 命令执行失败
+                                return HttpResponse(json.dumps({"status": 4}))
+                        elif kind == 'port':
+                            ports = policy_json['ports']
+                            for port in ports:
+                                cmd1 = 'firewall-cmd --permanent --zone=' + zone + ' --add-port=' + port + '/tcp'
+                                cmd2 = 'firewall-cmd --reload'
+                                if session.ssh_cmd(cmd1):
+                                    if session.ssh_cmd(cmd2):
+                                        return HttpResponse(json.dumps({"status": 0}))
+                                    else:
+                                        # 命令执行失败
+                                        return HttpResponse(json.dumps({"status": 4}))
+                                else:
+                                    # 命令执行失败
+                                    return HttpResponse(json.dumps({"status": 4}))
+                            return HttpResponse(json.dumps({"status": 0}))
+                    elif state == 'Down':
+                        # 主机网络不通
+                        return HttpResponse(json.dumps({"status": 1}))
+                else:
+                    # 前端传递参数错误
+                    return HttpResponse(json.dumps({"status": 2}))
+            except Exception as ex:
+                #运行异常
+                return HttpResponse(json.dumps({"status": 3}))
         if request.method == 'DELETE':
             pass
 

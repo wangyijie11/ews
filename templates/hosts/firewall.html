@@ -113,7 +113,7 @@
                 <div class="layui-form-item">
                     <div class="layui-input-block">
                         <button type="reset" class="layui-btn layui-btn-primary">重置</button>
-                        <button lay-submit class="layui-btn layui-btn-normal" lay-filter="applyccommit">确认</button>
+                        <button lay-submit class="layui-btn layui-btn-normal" lay-filter="applycommit">确认</button>
                     </div>
                 </div>
             </form>
@@ -192,16 +192,15 @@
                 var data = obj.data; //获得当前行数据
                 var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
                 var tr = obj.tr; //获得当前行 tr 的DOM对象
+                var policy_id = data['policy_id'];
 
                 if (layEvent === 'del') { //删除
                     layer.confirm('确认删除？', function (index) {
-                    var id = data['policy_id'];
-
                         //向服务端发送删除指令
                         $.ajax({
                             url: '{% url 'hosts:firewall' %}',
                             type: "delete",
-                            data: {"id": id},
+                            data: {"id": policy_id},
                             success: function (data) {
                                 data = JSON.parse(data);
                                 if (data["status"] == 0) {
@@ -222,9 +221,12 @@
                     var url = '{% url 'hosts:get_hostip' %}';
                     $.get(url, function (result) {
                         var hosts = result.data;
+                        $('#hostCheckBox').html("");
                         var hostCheckBox = $("#hostCheckBox");
                         $.each(hosts, function (index, data) {
-                            var hostOption= $("<input value=\"" + data.id + "\"" + "type=\"checkbox\" name=\"\" title=\"" + data.ip + "\">"  );
+                            var policyOption= $("<input value=\"" + policy_id + "\"" + "style=\"display:none\" name=\"policy\">" );
+                            var hostOption = $("<input value=\"" + data.id + "\"" + "type=\"checkbox\" name=\"host\" title=\"" + data.ip + "\">"  );
+                            hostCheckBox.append(policyOption);
                             hostCheckBox.append(hostOption);
                         });
                         layer.open({
@@ -248,6 +250,7 @@
                         var url = '{% url 'users:get_grouplist' %}';
                         $.get(url, function (result) {
                             var groups = result.data;
+                            $('#groupSelect').html("");
                             var groupSelect = $("#groupSelect");
                             $.each(groups, function (index, data) {
                                 var groupOption = $("<option value='" + data.id + "'>" + data.groupname + "</option>");
@@ -268,6 +271,7 @@
                         var url = '{% url 'users:get_grouplist' %}';
                         $.get(url, function (result) {
                             var groups = result.data;
+                            $('#groupSelect-2').html("");
                             var groupSelect = $("#groupSelect-2");
                             $.each(groups, function (index, data) {
                                 var groupOption = $("<option value='" + data.id + "'>" + data.groupname + "</option>");
@@ -344,11 +348,13 @@
                     success:function (data) {
                         data = JSON.parse(data);
                         if (data["status"] == 0){
-                            layer.msg('成功');
+                            layer.msg('应用成功');
                             layer.close(layui.index);
                             location.reload();
-                        } else if (data["status"] == 1){
-                            layer.msg('失败');
+                        } else if (data["status"] == 1) {
+                            layer.msg('主机网络不通');
+                        } else if (data["status"] == 2){
+                            layer.msg('POST请求数据错误');
                         } else {
                             layer.msg('运行异常');
                         }
