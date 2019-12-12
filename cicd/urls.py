@@ -13,22 +13,15 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path
-from django.conf.urls import include
-from django.conf.urls import url
-from users import views
 
+from django.conf.urls import url
+from cicd import views
+
+app_name = 'cicd'
 urlpatterns = [
-    url(r'^dashboard/', views.dashboard, name='dashboard'),
-    url(r'^login/', views.login, name='login'),
-    url(r'^logout/', views.logout, name='logout'),
-    url(r'^$', views.dashboard, name="index"),
-    path('admin/', admin.site.urls),
-    path('hosts/', include('hosts.urls')),
-    path('users/', include('users.urls')),
-    path('repository/', include('repository.urls')),
-    path('project/', include('project.urls')),
-    path('docker/', include('dockerclient.urls')),
-    path('cicd/', include('cicd.urls')),
+    url(r'^cicdlist/', views.cicdlist, name='cicdlist'),
+    url(r'^cicdjoblist/', views.cicdjoblist, name='cicdjoblist'),
+    url(r'^cicd/', views.cicd, name='cicd'),
+    url(r'^cicdjob/', views.cicdjob, name='cicdjob'),
+
 ]

@@ -5,7 +5,14 @@
 {% endblock %}
 
 {% block content %}
-    <div style="padding: 20px; background-color: #F2F2F2;">
+
+    <div class="layui-row">
+        <div class="layui-col-xs4 layui-breadcrumb" style="visibility: visible; padding: 10px 10px 0px 10px; line-height:28px;">
+            <div class="grid-demo"><a><cite>公有仓库</cite></a></div>
+        </div>
+    </div>
+
+    <div style="padding: 20px; margin: 10px 0px;  background-color: #F2F2F2;">
         <div class="layui-row layui-col-space15" id="imagelist">
             <!-- 每个公有镜像卡片-->
 <!--
@@ -20,6 +27,7 @@
 -->
         </div>
     </div>
+
 {% endblock %}
 
 {% block script%}
@@ -45,9 +53,10 @@
                             images = result.data,
                             imageDiv = $('#imagelist');
                         $.each(images, function (index, data) {
-                            var imageOption = $("<div class='layui-col-md3' onclick='toImageTags(this)'><div class='layui-card'><div class='layui-card-header'>" +
-                                data.repository + "</div><div class='layui-card-body' style='height:185px; overflow: hidden; text-overflow: ellipsis;'>" +
-                                data.desc + "</div></div></div>")
+                            var imageOption = $("<div class='layui-col-md3' onclick='toImageTags(this)'>" +
+                                "<div class='layui-card'><div class='layui-card-header'>" + data.repository +
+                                "</div><div class='layui-card-body' style='height:185px; overflow: hidden; text-overflow: ellipsis;'>" +
+                                data.desc + "</div></div></div>");
                             imageDiv.append(imageOption)
                         })
 

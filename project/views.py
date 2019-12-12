@@ -15,6 +15,11 @@ from project.models import EwsProject, EwsProjectVersion, EwsProjectApp
 from repository.models import EwsRepository
 from project.models import EwsCompose
 from project.projectmgr import *
+from .forms import UploadForm
+import os
+from django.conf import settings
+
+
 # Create your views here.
 
 
@@ -47,6 +52,42 @@ def composelist(request):
     else:
         return redirect('/login/')
 
+
+# 上传文件
+def uploadlist(request):
+    is_login = request.session.get('is_login', False)
+    if is_login:
+        ews_account = request.session.get('ews_account')
+        return render(request, 'project/uploadFile.html', {'ews_account': ews_account})
+    else:
+        return redirect('/login/')
+
+
+@csrf_exempt
+# 获取项目，不分页
+def get_projectlist(request):
+    if request.session.get('is_login', None):
+        if request.method == 'GET':
+            ews_accountid = request.session.get('ews_accountid')
+            groups = User.objects.get(pk=ews_accountid).groups.all()
+            result = {}
+            dict = []
+            for g in groups:
+                projects = Group.objects.get(pk=g.id).ewsproject_set.all()
+                for p in projects:
+                    dic = {}
+                    dic['groupid'] = g.id
+                    dic['groupname'] = g.name
+                    dic['projectid'] = p.id
+                    dic['projectname'] = p.projectname
+                    dic['repository'] = p.repository
+                    dic['created_time'] = p.created_time
+                    dict.append(dic)
+            result['code'] = 0
+            result['msg'] = ""
+            result['count'] = projects.count()
+            result['data'] = dict
+            return JsonResponse(result, safe=False)
 
 # 项目POST/GET/DELETE，添加、删除、获取项目
 @csrf_exempt
@@ -129,6 +170,31 @@ def project(request):
 
 # 版本GET/POST/DELETE
 @csrf_exempt
+def get_versionlist(request):
+    if request.session.get('is_login', None):
+        if request.method == 'GET':
+            projectid = request.GET.get('projectid')
+            if projectid:
+                versions = EwsProject.objects.get(pk=projectid).ewsprojectversion_set.all()
+                total = versions.count()
+                result = {}
+                dict = []
+                for v in versions:
+                    dic = {}
+                    dic['versionid'] = v.id
+                    dic['version'] = v.version
+                    dic['projectname'] = EwsProject.objects.get(pk=projectid).projectname
+                    dic['created_time'] = v.created_time
+                    dict.append(dic)
+                result['code'] = 0
+                result['msg'] = ""
+                result['count'] = total
+                result['data'] = dict
+                return JsonResponse(result, safe=False)
+
+
+# 版本GET/POST/DELETE
+@csrf_exempt
 def version(request):
     if request.session.get('is_login', None):
         if request.method == 'POST':
@@ -197,11 +263,11 @@ def compose(request):
             rows = request.GET.get('limit')
             i = (int(page) - 1) * int(rows)
             j = (int(page) - 1) * int(rows) + int(rows)
-            if version and projectid:
+            if versionid:
                 try:
                     result = {}
                     data = get_compose_byversion(versionid)
-                    result['data'] = data
+                    result['data'] = data[i:j]
                     result['code'] = 0
                     result['msg'] = ""
                     result['count'] = len(data)
@@ -222,13 +288,10 @@ def compose(request):
                         for p in projects:
                             data = get_compose_byproject(p.id)
                             dict = dict + data
-                    print(dict)
                     result['code'] = 0
                     result['msg'] = ""
                     result['count'] = len(dict)
-                    print(len(dict))
-                    result['data'] = dict
-                    print(result)
+                    result['data'] = dict[i:j]
                     return JsonResponse(result, safe=False)
                 except Exception as ex:
                     print(ex)
@@ -241,17 +304,11 @@ def compose(request):
             elif any(projectid) and versionid is None:
                 try:
                     result = {}
-                    dict = []
-                    for g in groups:
-                        projects = Group.objects.get(pk=g.id).ewsproject_set.all()
-                        for p in projects:
-                            data = get_compose_byproject(p.id)
-                            if len(data) != 0 :
-                                dict = dict + data
+                    data = get_compose_byproject(projectid)
                     result['code'] = 0
                     result['msg'] = ""
-                    result['count'] = len(dict)
-                    result['data'] = dict
+                    result['count'] = len(data)
+                    result['data'] = data[i:j]
                     return JsonResponse(result, safe=False)
                 except Exception as ex:
                     result['code'] = 500
@@ -268,3 +325,44 @@ def compose(request):
                 result['data'] = ""
                 return JsonResponse(result, safe=False)
 
+
+# 上传文件
+@csrf_exempt
+def upload(request):
+    if request.session.get('is_login', None):
+        if request.method == 'POST':
+            form = UploadForm(request.POST, request.FILES)
+            projectid = request.POST.get('projectid')
+            versionid = request.POST.get('versionid')
+            if form.is_valid() and projectid and versionid:
+                try:
+                    files = request.FILES.getlist('file')
+                    path_project = EwsProject.objects.get(pk=projectid).projectname
+                    path_version = EwsProjectVersion.objects.get(pk=versionid).version
+                    for f in files:
+                        new_compose = models.EwsCompose()
+                        new_compose.created_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                        new_compose.update_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                        new_compose.path = os.path.join(settings.MEDIA_ROOT, path_project, path_version)
+                        new_compose.compose_file = f.name
+                        new_compose.description = ''
+                        new_compose.compose_json = ''
+                        new_compose.tab_project_id = projectid
+                        new_compose.tab_version_id = versionid
+
+                        if not os.path.isdir(new_compose.path):
+                            os.makedirs(new_compose.path)
+                        destination = open(os.path.join(new_compose.path, f.name), 'wb+')
+                        for chunk in f.chunks():
+                            destination.write(chunk)
+                        destination.close()
+                        new_compose.save()
+                    # 返回成功
+                    return HttpResponse(json.dumps({"code": 0}))
+                except Exception as ex:
+                    # 文件写入失败
+                    print(ex)
+                    return HttpResponse(json.dumps({"code": 1}))
+            else:
+                # 返回POST请求缺少参数
+                return HttpResponse(json.dumps({"code": 2}))

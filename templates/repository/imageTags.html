@@ -6,7 +6,18 @@
 {% endblock %}
 
 {% block content %}
-
+    <div class="layui-row">
+        <div class="layui-col-xs4 layui-breadcrumb" style="visibility: visible; padding: 10px 10px 0px 10px; line-height:28px;">
+            <form class="layui-form" lay-filter="formDemo" action="">
+                <div class="grid-demo" id="citeDemo">
+                    <!--
+                    <a href="{% url 'repository:repositorylist' %}?registry=2">私有仓库</a>
+                    <a><cite>镜像列表</cite></a>
+                    -->
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="layui-row layui-col-space1">
     <!-- 镜像标签表格-->
         <div class="layui-col-md2">
@@ -165,6 +176,25 @@
                    data: pre_push,
                 });
             });
+
+            // 目录引用
+            $('#citeDemo').html("");
+            var citeDemo = $('#citeDemo');
+            if (registry == 2) {
+                var citeOption = $("<a href={% url 'repository:repositorylist' %}?registry=" + registry +
+                ">开发仓库</a><a><cite>镜像列表</cite></a>");
+            }else if (registry == 3) {
+                var citeOption = $("<a href={% url 'repository:repositorylist' %}?registry=" + registry +
+                ">测试仓库</a><a><cite>镜像列表</cite></a>");
+            }else if(registry == 4) {
+                var citeOption = $("<a href={% url 'repository:repositorylist' %}?registry=" + registry +
+                ">发布仓库</a><a><cite>镜像列表</cite></a>");
+            }else {
+                var citeOption = $("<a>私有仓库</a><a><cite>镜像列表</cite></a>");
+            }
+            citeDemo.append(citeOption);
+            form.render(null, 'formDemo');
+
         });
     </script>
 {% endblock %}

@@ -33,14 +33,14 @@
             <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
             <ul class="layui-nav layui-nav-tree" lay-filter="test">
                 <li class="layui-nav-item"><a href="{% url 'dashboard' %}">资源面板</a></li>
-                <li class="layui-nav-item layui-nav-itemed">
+                <li class="layui-nav-item">
                     <a class="" href="javascript:;">主机管理</a>
                     <dl class="layui-nav-child">
                         <dd><a href="{% url 'hosts:hostlist' %}">主机列表</a></dd>
                         <dd><a href="{% url 'hosts:firewalllist' %}">防火墙</a></dd>
                     </dl>
                 </li>
-                <li class="layui-nav-item layui-nav-itemed">
+                <li class="layui-nav-item">
                     <a class="" href="javascript:;">镜像仓库</a>
                     <dl class="layui-nav-child">
                         <dd><a href="{% url 'repository:repositorypublist' %}">公有仓库</a></dd>
@@ -63,9 +63,9 @@
                         <dd><a href="javascript:;">服务编排</a></dd>
                     </dl>
                 </li>
-                <li class="layui-nav-item"><a href="javascript:;">持续集成</a></li>
+                <li class="layui-nav-item"><a href="{% url 'cicd:cicdlist' %}">持续集成</a></li>
                 <li class="layui-nav-item"><a href="javascript:;">我的集群</a></li>
-                <li class="layui-nav-item layui-nav-itemed">
+                <li class="layui-nav-item">
                     <a class="" href="javascript:;">我的项目</a>
                     <dl class="layui-nav-child">
                         <dd><a href="{% url 'project:projectlist' %}">项目版本</a></dd>

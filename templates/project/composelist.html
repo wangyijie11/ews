@@ -2,72 +2,64 @@
 {% load staticfiles %}
 {% block css %}
     <link rel="stylesheet" href="/static/layui/css/layui.css">
+
 {% endblock %}
 
 {% block content %}
-    <!-- 新建项目版本表单 -->
-    <div class="layui-row" id="addversion" style="display:none;">
-        <div class="layui-col-md12">
-            <form class="layui-form">
-                {% csrf_token %}
-                <br>
-                <div class="layui-form-item">
-                    <label class="layui-form-label">版本号：</label>
-                    <div class="layui-input-inline">
-                        <input type="text" name="version" class="layui-input" lay-verify="required"
-                               placeholder="请输入版本号（eg: v1.0）">
-                    </div>
-                </div>
+    <!-- 上传-->
+    <div class="layui-upload" id="uploadFile" style="display: none">
+        <button type="button" class="layui-btn layui-btn-normal" id="testList">选择多文件</button>
+        <div class="layui-upload-list">
+            <table class="layui-table">
+                <thead>
+                <tr>
+                    <th>文件名</th>
+                    <th>大小</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody id="demoList"></tbody>
+            </table>
+        </div>
+        <button type="button" class="layui-btn" id="testListAction">开始上传</button>
+    </div>
 
-                <div class="layui-form-item">
-                    <div class="layui-input-block">
-                        <button type="reset" class="layui-btn layui-btn-primary">重置</button>
-                        <button lay-submit class="layui-btn layui-btn-normal" lay-filter="versioncommit">确认</button>
+    <!-- 导航 -->
+    <div class="layui-row">
+        <div class="layui-col-xs4 layui-breadcrumb" style="visibility: visible; padding: 10px 10px 0px 10px;
+            line-height:28px;">
+            <a><cite>配置模板</cite></a>
+        </div>
+        <div class="layui-col-xs8">
+            <div class="layui-form-item" style="margin-top: 10px">
+                <form class="layui-form" lay-filter="selectForm1" action="">
+                    {% csrf_token %}
+                    <label class="layui-form-label">项目：</label>
+                    <div class="layui-input-inline">
+                        <select name="project" id="projectSelect" class="layui-input" lay-filter="projectClick">
+                            <option value="">请选择一个项目</option>
+                        </select>
                     </div>
-                </div>
-            </form>
+                </form>
+                <form class="layui-form" lay-filter="selectForm2" action="">
+                    {% csrf_token %}
+                    <label class="layui-form-label">版本：</label>
+                    <div class="layui-input-inline">
+                        <select name="version" id="versionSelect" class="layui-input" lay-filter="versionClick">
+                            <option value="">请选择一个版本</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- 筛选 -->
-    <div class="layui-row">
-        <form class="layui-form" action="">
-            <div class="layui-form-item" style="margin-top: 22px">
-                <label class="layui-form-label">项目：</label>
-                <div class="layui-input-inline">
-                    <select name="selectProject">
-                        <option value="浙江" selected="">浙江省</option>
-                    </select>
-                </div>
-                <label class="layui-form-label">版本：</label>
-                <div class="layui-input-inline">
-                    <select name="selectVersion">
-                        <option value="杭州">杭州</option>
-                    </select>
-                </div>
-            </div>
-        </form>
-    </div>
 
-    <!-- 上传-->
-<div class="layui-upload" id="uploadFile" style="display: none">
-  <button type="button" class="layui-btn layui-btn-normal" id="testList">选择多文件</button>
-  <div class="layui-upload-list">
-    <table class="layui-table">
-      <thead>
-        <tr><th>文件名</th>
-        <th>大小</th>
-        <th>状态</th>
-        <th>操作</th>
-      </tr></thead>
-      <tbody id="demoList"></tbody>
-    </table>
-  </div>
-  <button type="button" class="layui-btn" id="testListAction">开始上传</button>
-</div>
 
     <!-- 项目版本表格-->
     <table id="composelist" lay-filter="tableDemo"></table>
+
 {% endblock %}
 
 {% block script %}
@@ -99,8 +91,9 @@
                 layer = layui.layer,
                 form = layui.form,
                 upload = layui.upload,
-                $ = layui.jquery,
-                projectid = getQueryString('projectid');
+                $ = layui.jquery;
+
+
 
             //表格渲染
             table.render({
@@ -122,9 +115,6 @@
                     {title: '操作', align: 'center', toolbar: '#barDemo', width: '20%'},
                 ]],
             });
-
-            form.render('select', 'selectProject');
-            form.render('select', 'selectVersion');
 
             //监听工具条,每行
             table.on('tool(tableDemo)', function (obj) { //注：tool是工具条事件名，host是table原始容器的属性 lay-filter="对应的值"
@@ -170,94 +160,134 @@
                             type: 1,
                             title: "上传容器启动文件",
                             area: ['800px', '600px'],
-                            content: $('#uploadFile').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
+                            content: $('#uploadFile').html(), //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
+                            success: function (layero, index) {
+                                var uploadbtn = $(layero).find("button")[0]; //获取DOM对象testList
+                                var uploadlist = $(layero).find("tbody")[0]; //获取DOM对象demoList
+                                var actionbtn = $(layero).find("button")[1]; //获取DOM对象testListAction
+                                console.log(uploadbtn);
+                                console.log(uploadlist);
+                                //多文件列表示例
+                                var demoListView = $(uploadlist),
+                                    uploadListIns = upload.render({
+                                        elem: $(uploadbtn),
+                                        url: '{% url 'project:upload' %}',
+                                        data: {'projectid': 8, 'versionid': 4},
+                                        accept: 'file',
+                                        multiple: true,
+                                        auto: false,
+                                        bindAction: $(actionbtn),
+                                        choose: function (obj) {
+                                            var files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
+                                            console.log(files);
+                                            //读取本地文件
+                                            obj.preview(function (index, file, result) {
+                                                var tr = $(['<tr id="upload-' + index + '">'
+                                                    , '<td>' + file.name + '</td>'
+                                                    , '<td>' + (file.size / 1014).toFixed(1) + 'kb</td>'
+                                                    , '<td>等待上传</td>'
+                                                    , '<td>'
+                                                    , '<button class="layui-btn layui-btn-xs demo-reload layui-hide">重传</button>'
+                                                    , '<button class="layui-btn layui-btn-xs layui-btn-danger demo-delete">删除</button>'
+                                                    , '</td>'
+                                                    , '</tr>'].join(''));
+
+                                                //单个重传
+                                                tr.find('.demo-reload').on('click', function () {
+                                                    obj.upload(index, file);
+                                                });
+
+                                                //删除
+                                                tr.find('.demo-delete').on('click', function () {
+                                                    delete files[index]; //删除对应的文件
+                                                    tr.remove();
+                                                    uploadListIns.config.elem.next()[0].value = ''; //清空 input file 值，以免删除后出现同名文件不可选
+                                                });
+                                                console.log( 'tr:',tr);
+                                                demoListView.append(tr);
+
+                                            });
+                                        }
+                                        , done: function (res, index, upload) {
+                                            if (res.code == 0) { //上传成功
+                                                var tr = demoListView.find('tr#upload-' + index)
+                                                    , tds = tr.children();
+                                                tds.eq(2).html('<span style="color: #5FB878;">上传成功</span>');
+                                                tds.eq(3).html(''); //清空操作
+                                                return delete this.files[index]; //删除文件队列已经上传成功的文件
+                                            }
+                                            this.error(index, upload);
+                                        }
+                                        , error: function (index, upload) {
+                                            var tr = demoListView.find('tr#upload-' + index)
+                                                , tds = tr.children();
+                                            tds.eq(2).html('<span style="color: #FF5722;">上传失败</span>');
+                                            tds.eq(3).find('.demo-reload').removeClass('layui-hide'); //显示重传
+                                        }
+                                    });
+                            }
+
                         });
+
+
                         break;
                     case 'delete':
 
                         break;
                 }
+
             });
 
-            // 添加版本提交表单
-            form.on('submit(versioncommit)', function (data) {
-                data.field.projectid = projectid
-                $.post({
-                    url: '{% url 'project:version' %}',
-                    data: data.field,
-                    success: function (data) {
-                        data = JSON.parse(data);
-                        if (data["status"] == 0) {
-                            layer.close(layui.index);
-                            location.reload();
-                            layer.msg('添加成功');
-                        } else if (data["status"] == 1) {
-                            layer.msg('数据异常');
-                        } else if (data["status"] == 2) {
-                            layer.msg('请求异常');
-                        } else if (data["status"] == 3) {
-                            layer.msg('版本已存在');
-                        }
-                    }
+            //项目下拉框加载
+            var urlproj = '{% url 'project:get_projectlist' %}';
+            $.get(urlproj, function (result) {
+                var projects = result.data;
+                $('#projectSelect').html("");
+                var projectSelect = $("#projectSelect");
+                var projectOption = $("<option value=''>请选择一个项目</option>");
+                projectSelect.append(projectOption);
+                $.each(projects, function (index, data) {
+                    console.log(data.projectname);
+                    var projectOption = $("<option value='" + data.projectid + "'>" + data.projectname + "</option>");
+                    projectSelect.append(projectOption);
                 });
-                return false;
+                form.render('select', 'selectForm1');
+
             });
 
-            //多文件列表示例
-            var demoListView = $('#demoList')
-                , uploadListIns = upload.render({
-                elem: '#testList'
-                , url: '/upload/'
-                , accept: 'file'
-                , multiple: true
-                , auto: false
-                , bindAction: '#testListAction'
-                , choose: function (obj) {
-                    var files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
-                    //读取本地文件
-                    obj.preview(function (index, file, result) {
-                        var tr = $(['<tr id="upload-' + index + '">'
-                            , '<td>' + file.name + '</td>'
-                            , '<td>' + (file.size / 1014).toFixed(1) + 'kb</td>'
-                            , '<td>等待上传</td>'
-                            , '<td>'
-                            , '<button class="layui-btn layui-btn-xs demo-reload layui-hide">重传</button>'
-                            , '<button class="layui-btn layui-btn-xs layui-btn-danger demo-delete">删除</button>'
-                            , '</td>'
-                            , '</tr>'].join(''));
-
-                        //单个重传
-                        tr.find('.demo-reload').on('click', function () {
-                            obj.upload(index, file);
-                        });
-
-                        //删除
-                        tr.find('.demo-delete').on('click', function () {
-                            delete files[index]; //删除对应的文件
-                            tr.remove();
-                            uploadListIns.config.elem.next()[0].value = ''; //清空 input file 值，以免删除后出现同名文件不可选
-                        });
-
-                        demoListView.append(tr);
+            //版本下拉框加载
+            form.on('select(projectClick)', function (data) {
+                console.log(data.value);
+                var projectid = data.value;
+                var urlversion =  '{% url 'project:get_versionlist' %}?projectid=' + projectid;
+                $.get(urlversion, function (result) {
+                    var projects = result.data;
+                    $('#versionSelect').html("");
+                    var versionSelect = $("#versionSelect");
+                    var versionOption = $("<option value=''>请选择一个版本</option>");
+                    versionSelect.append(versionOption);
+                    $.each(projects, function (index, data) {
+                        console.log(data.version);
+                        var versionOption = $("<option value='" + data.versionid + "'>" + data.version + "</option>");
+                        versionSelect.append(versionOption);
                     });
-                }
-                , done: function (res, index, upload) {
-                    if (res.code == 0) { //上传成功
-                        var tr = demoListView.find('tr#upload-' + index)
-                            , tds = tr.children();
-                        tds.eq(2).html('<span style="color: #5FB878;">上传成功</span>');
-                        tds.eq(3).html(''); //清空操作
-                        return delete this.files[index]; //删除文件队列已经上传成功的文件
-                    }
-                    this.error(index, upload);
-                }
-                , error: function (index, upload) {
-                    var tr = demoListView.find('tr#upload-' + index)
-                        , tds = tr.children();
-                    tds.eq(2).html('<span style="color: #FF5722;">上传失败</span>');
-                    tds.eq(3).find('.demo-reload').removeClass('layui-hide'); //显示重传
-                }
+                    form.render('select', 'selectForm2');
+                })
             });
+
+            //选择版本后，表格重新加载
+            form.on('select(versionClick)', function (data) {
+                console.log(data.value);
+                var versionid = data.value;
+                table.reload('composelist', {
+                    url: '{% url 'project:compose' %}',
+                    where: {
+                        versionid: versionid
+                    }
+                })
+            })
+
+
         });
     </script>
 {% endblock %}

@@ -118,9 +118,22 @@
                 </div>
             </form>
         </div>
-
     </div>
 
+    <!-- 获取已应用防火墙策略的IP地址列表 -->
+    <div class="layui-row" id="applypolicy-ip" style="display:none;">
+        <div class="layui-col-md12">
+            <form class="layui-form">
+                {% csrf_token %}
+                <br>
+                <div class="layui-form-item">
+                    <div class="" style="margin: 0px 20px" id="hostList">
+
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div class="layui-row">
         <div class="layui-col-xs4 layui-breadcrumb" style="visibility: visible; padding: 10px 10px 0px 10px; line-height:28px;">
@@ -178,10 +191,10 @@
                 cols: [[
                     {checkbox: true, fixed: true},
                     {field: 'policy_id', title: 'ID', width: '10%'},
-                    {field: 'policy_name', title: '防火墙策略', width: '30%'},
+                    {field: 'policy_name', title: '防火墙策略', width: '20%'},
                     {field: 'kind', title: '策略类型', width: '10%'},
-                    {field: 'count', title: '已应用的IP总数', width: '12%'},
-                    {field: 'count', title: '系统推荐', width: '8%'},
+                    {field: 'policy_json', title: '策略明细', width: '22%'},
+                    {field: 'count', title: '应用IP数', width: '8%', event: 'countClick'},
                     {title: '操作', align: 'center', toolbar: '#barDemo', width: '26%'},
                 ]],
             });
@@ -238,6 +251,27 @@
                         /* 渲染表单 */
                         form.render();
                     })
+                }else if (obj.event === 'countClick') {
+                    var url = '{% url 'hosts:get_host_byfirewall' %}';
+                    var data = {'policy_id': data.policy_id};
+                    $.get(url, data, function(result){
+                        var hosts = result.data;
+                        $('#hostList').html("");
+                        var hostList = $('#hostList');
+                        $.each(hosts, function (index, data) {
+                            var hostOption = $("<input value=\"" + data.ip + "\"" + " name=\"policy\" class=\"layui-input\">");
+                            hostList.append(hostOption);
+                        })
+                        layer.open({
+                            type: 0,
+                            title: "已应用防火墙规则的IP",
+                            area: ['380px', '300px'],
+                            content: $('#applypolicy-ip').html(),
+                        });
+                        /* 渲染表单 */
+                        form.render();
+                    })
+
                 }
             });
 

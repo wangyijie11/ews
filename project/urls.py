@@ -20,11 +20,19 @@ from project import views
 app_name = 'project'
 urlpatterns = [
     url(r'^projectlist/', views.projectlist, name='projectlist'),
+    # 获取项目名，不分页，用于下拉框
+    url(r'^get_projectlist/', views.get_projectlist, name='get_projectlist'),
+    # 获取项目名，分页，用于表
     url(r'^project/', views.project, name='project'),
     url(r'^versionlist/', views.versionlist, name='versionlist'),
+    # 获取版本号，不分页，用于下拉框
+    url(r'^get_versionlist/', views.get_versionlist, name='get_versionlist'),
+    # 获取版本号，分页，用于表
     url(r'^version/', views.version, name='version'),
     url(r'^composelist/', views.composelist, name='composelist'),
     url(r'compose/', views.compose, name='compose'),
+    url(r'upload/', views.upload, name='upload'),
+
 
 
 

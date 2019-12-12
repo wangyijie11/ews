@@ -101,6 +101,29 @@ def get_hostip(request):
             result['data'] = dict
             return JsonResponse(result, safe=False)
 
+# 获取防火墙策略部署的IP地址
+@csrf_exempt
+def get_host_byfirewall(request):
+    if request.session.get('is_login', None):
+        if request.method == 'GET':
+            policy_id = request.GET.get('policy_id')
+            hostids = EwsFirewall.objects.get(pk=policy_id).ewshostfirewall_set.all()
+            try:
+                result = {}
+                dict = []
+                for ids in hostids:
+                    dic = {}
+                    dic['ip'] = ids.tab_host.ip
+                    dict.append(dic)
+                total = len(dict)
+                result['code'] = 0
+                result['msg'] = ""
+                result['count'] = total
+                result['data'] = dict
+                return JsonResponse(result, safe=False)
+            except Exception as ex:
+                #运行异常
+                return HttpResponse(json.dumps({"status": 1}))
 
 # 部署防火墙策略至主机
 @csrf_exempt
@@ -111,7 +134,7 @@ def applypolicy(request):
             host_id = request.POST.get('host')
             policy_id = request.POST.get('policy')
             try:
-                if id:
+                if host_id and policy_id:
                     host = EwsHost.objects.get(pk=host_id)
                     ssh_password = host.ssh_password
                     ssh_user = host.ssh_user
@@ -134,10 +157,20 @@ def applypolicy(request):
                             accept = policy_json['rule']['accept']
                             if accept == 'True':
                                 accept = 'accept'
-                            cmd1 = 'firewall-cmd --permanent --zone=' + zone + ' --add-rich-rule=\'rule family=' + rule_family + ' source address=' + source_address + ' port port=' + port + ' protocol=' + protocol + ' ' + accept + '\''
+                            cmd1 = 'firewall-cmd --permanent --zone=' + zone + ' --add-rich-rule \'rule family='\
+                                   + rule_family + ' source address=' + source_address + ' port port=' + port + \
+                                   ' protocol=' + protocol + ' ' + accept + '\''
                             cmd2 = 'firewall-cmd --reload'
                             if session.ssh_cmd(cmd1):
                                 if session.ssh_cmd(cmd2):
+                                    new_host_firewall = models.EwsHostFirewall()
+                                    new_host_firewall.created_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                                    new_host_firewall.policy_cmd = cmd1
+                                    new_host_firewall.tab_firewall = policy_id
+                                    new_host_firewall.tab_host = host_id
+                                    new_host_firewall.tab_user = ews_accountid
+                                    new_host_firewall.save()
+
                                     return HttpResponse(json.dumps({"status": 0}))
                                 else:
                                     # 命令执行失败
@@ -152,6 +185,13 @@ def applypolicy(request):
                                 cmd2 = 'firewall-cmd --reload'
                                 if session.ssh_cmd(cmd1):
                                     if session.ssh_cmd(cmd2):
+                                        new_host_firewall = models.EwsHostFirewall()
+                                        new_host_firewall.created_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+                                        new_host_firewall.policy_cmd = cmd1
+                                        new_host_firewall.tab_firewall = policy_id
+                                        new_host_firewall.tab_host = host_id
+                                        new_host_firewall.tab_user = ews_accountid
+                                        new_host_firewall.save()
                                         return HttpResponse(json.dumps({"status": 0}))
                                     else:
                                         # 命令执行失败
