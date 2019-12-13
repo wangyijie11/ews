@@ -14,7 +14,7 @@ class EwsCicd(models.Model):
     tab_user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.ip
+        return self.id
 
     class Meta:
         db_table = 'ews_cicd'

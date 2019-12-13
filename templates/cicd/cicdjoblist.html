@@ -5,6 +5,14 @@
 {% endblock %}
 
 {% block content %}
+    <div class="layui-row">
+        <div class="layui-col-xs4 layui-breadcrumb" style="visibility: visible; padding: 10px 10px 0px 10px; line-height:28px;">
+            <div class="grid-demo">
+                <a href="{% url 'cicd:cicdlist' %}">持续集成</a>
+                <a><cite>任务列表</cite></a>
+            </div>
+        </div>
+    </div>
 
     <table id="cicdjoblist" lay-filter="tableDemo"></table>
 {% endblock %}
@@ -16,14 +24,13 @@
     </script>
 
     //批量操作按钮
-    <!--
+
     <script type="text/html" id="toolbarDemo">
         <div class="layui-btn-container">
-            <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
-            <button class="layui-btn layui-btn-sm" lay-event="delete">删除</button>
+            <button class="layui-btn layui-btn-sm" lay-event="build">运行</button>
         </div>
     </script>
-    -->
+
     <script>
 
         function getQueryString(name) {
@@ -49,13 +56,14 @@
                 limit: 10,
                 skin: 'line', //行边框风格
                 even: true, //开启隔行背景
-                toolbar: '',
+                toolbar: '#toolbarDemo',
                 cols: [[
                     {checkbox: true},
-                    {field: 'id', title: 'ID', width: '10%'},
                     {field: 'job_name', title: '任务名', width: '20%'},
-                    {field: 'job_desc', title: '任务描述', width: '25%'},
-                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '41%'},
+                    {field: 'job_desc', title: '任务描述', width: '35%'},
+                    {field: 'isrunning', title: '是否运行', width: '10%'},
+                    {field: 'isenabled', title: '是否有效', width: '10%'},
+                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '21%'},
                 ]],
             });
 
@@ -64,7 +72,19 @@
                 var data = obj.data; //获得当前行数据
                 var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
                 if (layEvent === 'build') { //跳转
+                    layer.confirm();
 
+                }
+            });
+
+
+            //监听工具栏事件,头部
+            table.on('toolbar(tableDemo)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                switch (obj.event) {
+                    case 'build':
+                        layer.confirm();
+                        break;
 
                 }
             });

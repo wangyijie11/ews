@@ -168,7 +168,7 @@ def project(request):
             return JsonResponse(result, safe=False)
 
 
-# 版本GET/POST/DELETE
+# 获取版本，不分页
 @csrf_exempt
 def get_versionlist(request):
     if request.session.get('is_login', None):

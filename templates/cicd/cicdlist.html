@@ -5,8 +5,58 @@
 {% endblock %}
 
 {% block content %}
+    <div class="layui-row">
+        <div class="layui-col-xs4 layui-breadcrumb" style="visibility: visible; padding: 10px 10px 0px 10px; line-height:28px;">
+            <div class="grid-demo"><a><cite>持续集成</cite></a></div>
+        </div>
+    </div>
 
     <table id="cicdlist" lay-filter="tableDemo"></table>
+
+    <div class="layui-row" id="addcicd" style="display:none;">
+        <div class="layui-col-md12">
+            <form class="layui-form">
+                {% csrf_token %}
+                <br>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">CICD地址：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="cicd_url" class="layui-input" lay-verify="required" placeholder="http://1.1.1.1:8080/jenkins/">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">CICD账号：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="cicd_user" class="layui-input" lay-verify="required" placeholder="请输入持续集成账号">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">密码：</label>
+                    <div class="layui-input-inline">
+                        <input type="password" name="cicd_passwd" class="layui-input" lay-verify="required" placeholder="请输入密码">
+                    </div>
+                </div>
+
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">备注：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="cicd_desc" class="layui-input" lay-verify="required" placeholder="备注方便区分账号用途">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                        <button lay-submit class="layui-btn layui-btn-normal" lay-filter="cicdcommit">确认</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block script%}
@@ -20,7 +70,7 @@
     <script type="text/html" id="toolbarDemo">
         <div class="layui-btn-container">
             <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
-            <button class="layui-btn layui-btn-sm" lay-event="delete">删除</button>
+            <button class="layui-btn layui-btn-sm" lay-event="del">删除</button>
         </div>
     </script>
 
@@ -58,8 +108,75 @@
                 if (layEvent === 'job') { //跳转
                     window.location.href = "{% url 'cicd:cicdjoblist' %}?cicdid=" + data.id
                 } else if (layEvent === 'del') { //删除
+                    layer.confirm('确认删除？', function (index) {
+                        var id = data['id'];
+
+                        //向服务端发送删除指令
+                        $.ajax({
+                            url: '{% url 'cicd:cicd' %}',
+                            type: "delete",
+                            data: {"id": id},
+                            success: function (data) {
+                                data = JSON.parse(data);
+                                if (data["status"] == 0) {
+                                    layer.closeAll();
+                                    layer.msg('删除成功');
+                                    obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+
+                                } else if (data["status"] == 1) {
+                                    layer.msg('获取ID失败');
+                                } else if (data["status"] == 2) {
+                                    layer.msg('请求异常');
+                                } else {
+                                    layer.msg('请求异常');
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+
+            //监听工具栏事件,头部
+            table.on('toolbar(tableDemo)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                switch (obj.event) {
+                    case 'add':
+                        layer.open({
+                            type: 1,
+                            title: "接入持续集成",
+                            area: ['350px', '350px'],
+                            content: $('#addcicd').html() //这里content是一个DOM，注意：最好该元素要存放在body最外层，否则可能被其它的相对元素所影响
+                        });
+                        break;
+
+                    case 'del':
+                        layer.confirm();
+                        break;
 
                 }
+            });
+
+             // 添加主机提交表单
+            form.on('submit(cicdcommit)',function (data) {
+                $.post({
+                    url: '{% url 'cicd:cicd' %}',
+                    data: data.field,
+                    success:function (data) {
+                        data = JSON.parse(data);
+                        if (data["status"] == 0){
+                            layer.msg('接入成功');
+                            layer.close(layui.index);
+                            location.reload();
+                        }else if (data["status"] == 1){
+                            layer.msg('账号密码认证未通过');
+                        }else if(data["status"] == 2){
+                            layer.msg('缺少请求参数');
+                        }else{
+                            layer.msg('接入失败');
+                        }
+                    }
+                });
+                return false;
             });
         });
     </script>
