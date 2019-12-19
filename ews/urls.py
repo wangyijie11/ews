@@ -31,4 +31,5 @@ urlpatterns = [
     path('project/', include('project.urls')),
     path('docker/', include('dockerclient.urls')),
     path('cicd/', include('cicd.urls')),
+    path('container/', include('container.urls')),
 ]

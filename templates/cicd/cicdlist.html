@@ -156,7 +156,7 @@
                 }
             });
 
-             // 添加主机提交表单
+             // 添加持续集成账号提交表单
             form.on('submit(cicdcommit)',function (data) {
                 $.post({
                     url: '{% url 'cicd:cicd' %}',

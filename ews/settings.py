@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'dockerclient',
     'registryclient',
     'cicd',
+    'container',
 ]
 
 MIDDLEWARE = [
