@@ -31,7 +31,7 @@ class EwsService(models.Model):
     project = models.CharField(max_length=255, blank=True, null=True)
     version = models.CharField(max_length=255, blank=True, null=True)
     created_time = models.DateTimeField(blank=True, null=True)
-    tab_host = models.ManyToManyField(EwsHost)
+    host = models.ManyToManyField(EwsHost)
     tab_service_group = models.ForeignKey(EwsServiceGroup, on_delete=models.CASCADE)
     tab_user = models.ForeignKey(User, on_delete=models.CASCADE)
 
