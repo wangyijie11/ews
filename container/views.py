@@ -77,6 +77,7 @@ def service(request):
                     result = {}
                     dict = []
                     services = EwsService.objects.filter(tab_service_group_id=service_group_id)
+                    services = services[i:j]
                     if services:
                         for s in services:
                             ips = []
@@ -94,7 +95,6 @@ def service(request):
                             dic['version'] = s.version
                             dic['service_desc'] = s.service_desc
                             dict.append(dic)
-                        dict = dict[i:j]
                         total = len(dict)
                         result['code'] = 0
                         result['msg'] = ""
@@ -129,22 +129,38 @@ def get_servicegroup(request):
     if request.session.get('is_login', None):
         if request.method == 'GET':
             ews_accountid = request.session.get('ews_accountid')
-            groups = User.objects.get(pk=ews_accountid).groups.all()
-            result = {}
-            dict = []
-            for g in groups:
-                servicegroups = Group.objects.get(pk=g.id).ewsservicegroup_set.all()
+            versionid = request.GET.get('versionid')
+            if versionid:
+                servicegroups = EwsServiceGroup.objects.filter(tab_version_id=versionid)
+                result = {}
+                dict = []
                 for s in servicegroups:
                     dic = {}
                     dic['id'] = s.id
                     dic['servive_group'] = s.service_group
-                    dic['servive_group_desc'] = s.service_group_desc
                     dict.append(dic)
-            result['code'] = 0
-            result['msg'] = ""
-            result['count'] = servicegroups.count()
-            result['data'] = dict
-            return JsonResponse(result, safe=False)
+                result['code'] = 0
+                result['msg'] = ""
+                result['count'] = servicegroups.count()
+                result['data'] = dict
+                return JsonResponse(result, safe=False)
+
+            elif versionid is None:
+                groups = User.objects.get(pk=ews_accountid).groups.all()
+                result = {}
+                dict = []
+                for g in groups:
+                    servicegroups = Group.objects.get(pk=g.id).ewsservicegroup_set.all()
+                    for s in servicegroups:
+                        dic = {}
+                        dic['id'] = s.id
+                        dic['servive_group'] = s.service_group
+                        dict.append(dic)
+                result['code'] = 0
+                result['msg'] = ""
+                result['count'] = servicegroups.count()
+                result['data'] = dict
+                return JsonResponse(result, safe=False)
 
 
 # 获取服务虚拟分组信息，分页
@@ -165,21 +181,44 @@ def get_servicegrouplist(request):
                 for s in servicegroups:
                     ips = []
                     ipobjs = EwsServiceGroup.objects.get(pk=s.id).host.all()
-                    for i in ipobjs:
-                        ips.append(i.ip)
+                    for ip in ipobjs:
+                        ips.append(ip.ip)
                     dic = {}
                     dic['id'] = s.id
                     dic['servive_group'] = s.service_group
-                    dic['servive_group_desc'] = s.service_group_desc
                     dic['project'] = EwsProject.objects.get(pk=s.tab_project_id).projectname
                     dic['version'] = EwsProjectVersion.objects.get(pk=s.tab_version_id).version
                     dic['host'] = ips
                     dict.append(dic)
-
-            dict = dict[i:j]
-            total = len(dict)
             result['code'] = 0
             result['msg'] = ""
-            result['count'] = total
+            result['count'] = len(dict)
+            result['data'] = dict[i:j]
+            return JsonResponse(result, safe=False)
+
+
+# 根据虚拟分组获取主机IP，分页
+@csrf_exempt
+def get_host_byservicegroup(request):
+    if request.session.get('is_login', None):
+        if request.method == 'GET':
+            ews_accountid = request.session.get('ews_accountid')
+            service_group_id = request.GET.get('service_group_id')
+            page = request.GET.get('page')
+            rows = request.GET.get('limit')
+            i = (int(page) - 1) * int(rows)
+            j = (int(page) - 1) * int(rows) + int(rows)
+            result = {}
+            dict = []
+            hosts = EwsHost.objects.filter(ewsservicegroup__id=service_group_id)
+            hosts = hosts[i:j]
+            for h in hosts:
+                dic = {}
+                dic['id'] = h.id
+                dic['ip'] = h.ip
+                dict.append(dic)
+            result['code'] = 0
+            result['msg'] = ""
+            result['count'] = len(dict)
             result['data'] = dict
             return JsonResponse(result, safe=False)

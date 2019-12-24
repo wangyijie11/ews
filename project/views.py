@@ -366,3 +366,21 @@ def upload(request):
             else:
                 # 返回POST请求缺少参数
                 return HttpResponse(json.dumps({"code": 2}))
+
+
+# 读取文件
+@csrf_exempt
+def readfile(request):
+    if request.session.get('is_login', None):
+        file_id = request.GET.get('file_id')
+        if file_id:
+            compose_file = EwsCompose.objects.get(pk=file_id)
+            with open(os.path.join(compose_file.path, compose_file.compose_file), 'r+') as f:
+                content = f.readlines()
+            result = {}
+            result['code'] = 0
+            result['data'] = content
+            result['id'] = compose_file.id
+            result['file'] = compose_file.compose_file
+            return JsonResponse(result, safe=False)
+

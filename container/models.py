@@ -8,7 +8,6 @@ from hosts.models import EwsHost
 class EwsServiceGroup(models.Model):
     id = models.AutoField(primary_key=True)
     service_group = models.CharField(max_length=255, blank=True, null=True)
-    service_group_desc = models.CharField(max_length=255, blank=True, null=True)
     created_time = models.DateTimeField(blank=True, null=True)
     tab_project = models.ForeignKey(EwsProject, on_delete=models.CASCADE)
     tab_version = models.ForeignKey(EwsProjectVersion, on_delete=models.CASCADE)

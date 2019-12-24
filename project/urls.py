@@ -31,7 +31,10 @@ urlpatterns = [
     url(r'^version/', views.version, name='version'),
     url(r'^composelist/', views.composelist, name='composelist'),
     url(r'compose/', views.compose, name='compose'),
+    # 上传文件
     url(r'upload/', views.upload, name='upload'),
+    # 读取文件
+    url(r'readfile/', views.readfile, name='readfile'),
 
 
 

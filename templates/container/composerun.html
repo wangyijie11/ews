@@ -1,7 +1,7 @@
 {% extends 'nav.html' %}
 {% load staticfiles %}
 {% block css %}
-<link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
 {% endblock %}
 
 {% block content %}
@@ -32,11 +32,11 @@
                         </select>
                     </div>
                 </form>
-                <form class="layui-form" lay-filter="selectForm1" action="">
+                <form class="layui-form" lay-filter="selectForm3" action="">
                     {% csrf_token %}
                     <label class="layui-form-label">环境：</label>
                     <div class="layui-input-inline">
-                        <select name="project" id="envSelect" class="layui-input" lay-filter="envClick">
+                        <select name="env" id="envSelect" class="layui-input" lay-filter="envClick">
                             <option value="">请选择一个环境</option>
                         </select>
                     </div>
@@ -45,17 +45,113 @@
         </div>
     </div>
 
+
+
+    <div class="layui-row">
+        <div class="layui-col-md4">
+            <!-- 主机-->
+            <table id="hostlist" lay-filter="hostlist"></table>
+            <!-- 文件-->
+            <table id="composelist" lay-filter="composelist"></table>
+        </div>
+        <div class="layui-col-md8">
+            <form class="layui-form layui-form-pane" action="" id="textarea">
+                <div class="layui-form-item layui-form-text" style="margin: 10px 10px">
+                    <label class="layui-form-label" id="label">文本域</label>
+                    <div class="layui-input-block">
+                        <textarea name="text" id="text" placeholder="请输入内容" class="layui-textarea"
+                                  style="min-height: 400px"></textarea>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block" style="margin: 0 10px; text-align:right">
+                        <button lay-submit class="layui-btn layui-btn-normal" lay-filter="saveccommit">保存</button>
+                        <button lay-submit class="layui-btn layui-btn-normal" lay-filter="deployccommit">部署</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
 {% endblock %}
 
-{% block script%}
+{% block script %}
 
     <script>
-        layui.use(['table', 'jquery', 'layer', 'form'], function () {
+        layui.use(['table', 'jquery', 'layer', 'form', 'layedit'], function () {
             var table = layui.table,
                 layer = layui.layer,
                 form = layui.form,
+                layedit = layui.layedit,
                 $ = layui.jquery;
 
+
+            //主机渲染
+            table.render({
+                elem: '#hostlist', //指定原始表格元素选择器（推荐id选择器）
+                url: '{% url 'hosts:host' %}',
+                page: true, //分页
+                method: 'get',
+                limit: 5,
+                page: {
+                    layout: ['prev', 'page', 'next', 'count'],
+                    groups: 1,
+                    first: false,
+                    last: false,
+                },
+                skin: 'line', //行边框风格
+                even: true, //开启隔行背景
+                cols: [[
+                    {checkbox: true},
+                    {field: 'id', title: 'ID', hide: true},
+                    {field: 'ip', title: 'IP'},
+                ]],
+            });
+
+            //compose文件列表渲染
+            table.render({
+                elem: '#composelist', //指定原始表格元素选择器（推荐id选择器）
+                url: '{% url 'project:compose' %}',
+                page: true, //分页
+                method: 'get',
+                limit: 5,
+                page: {
+                    layout: ['prev', 'page', 'next', 'count'],
+                    groups: 1,
+                    first: false,
+                    last: false,
+                },
+                skin: 'line', //行边框风格
+                even: true, //开启隔行背景
+                cols: [[
+                    {checkbox: true},
+                    {field: 'id', title: 'ID', hide: true},
+                    {field: 'compose_file', title: '文件'},
+                ]],
+            });
+
+            //监听行单击事件
+            table.on('row(composelist)', function (obj) {
+                var file_id = obj.data.id,
+                    file = obj.data.compose_file,
+                    urlfile = '{% url 'project:readfile' %}?file_id=' + file_id;
+                $.get(urlfile, function (result) {
+                    var content = result.data;
+                    var str_content = ''
+                    for (var i = 0; i < content.length; i++) {
+                        str_content = str_content + content[i]
+                    }
+                    $('#text').html("");
+                    $("#text").val(str_content);
+
+                })
+                //console.log(obj.tr) //得到当前行元素对象
+                //console.log(obj.data) //得到当前行数据
+                //obj.del(); //删除当前行
+                //obj.update(fields) //修改当前行数据
+            });
 
             //项目下拉框加载
             var urlproj = '{% url 'project:get_projectlist' %}';
@@ -66,7 +162,6 @@
                 var projectOption = $("<option value=''>请选择一个项目</option>");
                 projectSelect.append(projectOption);
                 $.each(projects, function (index, data) {
-                    console.log(data.projectname);
                     var projectOption = $("<option value='" + data.projectid + "'>" + data.projectname + "</option>");
                     projectSelect.append(projectOption);
                 });
@@ -76,9 +171,8 @@
 
             //版本下拉框加载
             form.on('select(projectClick)', function (data) {
-                console.log(data.value);
                 var projectid = data.value;
-                var urlversion =  '{% url 'project:get_versionlist' %}?projectid=' + projectid;
+                var urlversion = '{% url 'project:get_versionlist' %}?projectid=' + projectid;
                 $.get(urlversion, function (result) {
                     var projects = result.data;
                     $('#versionSelect').html("");
@@ -86,7 +180,6 @@
                     var versionOption = $("<option value=''>请选择一个版本</option>");
                     versionSelect.append(versionOption);
                     $.each(projects, function (index, data) {
-                        console.log(data.version);
                         var versionOption = $("<option value='" + data.versionid + "'>" + data.version + "</option>");
                         versionSelect.append(versionOption);
                     });
@@ -94,6 +187,61 @@
                 })
             });
 
+            //部署环境下拉框加载
+            form.on('select(versionClick)', function (data) {
+                var versionid = data.value;
+                var urlenv = '{% url 'container:get_servicegroup' %}?versionid=' + versionid;
+                $.get(urlenv, function (result) {
+                    var envs = result.data;
+                    $('#envSelect').html("");
+                    var envSelect = $("#envSelect");
+                    var envOption = $("<option value=''>请选择一个环境</option>");
+                    envSelect.append(envOption);
+                    $.each(envs, function (index, data) {
+                        var envOption = $("<option value='" + data.id + "'>" + data.servive_group + "</option>");
+                        envSelect.append(envOption);
+                    });
+                    form.render('select', 'selectForm3');
+                });
+                //选择版本后，compose文件表格重新加载
+                table.reload('composelist', {
+                    url: '{% url 'project:compose' %}',
+                    where: {
+                        versionid: versionid
+                    }
+                })
+            });
+
+
+            //选择部署环境后，主机表格重新加载
+            form.on('select(envClick)', function (data) {
+                var envid = data.value;
+                table.reload('hostlist', {
+                    url: '{% url 'container:get_host_byservicegroup' %}',
+                    where: {
+                        service_group_id: envid
+                    }
+                })
+            })
+
+
+            // 添加主机提交表单
+            form.on('submit(descommit)', function (data) {
+                $.post({
+                    url: '{% url 'hosts:host' %}',
+                    data: data.field,
+                    success: function (data) {
+                        data = JSON.parse(data);
+                        if (data["status"] == 0) {
+                            layer.msg('添加成功');
+                            layer.close(layui.index);
+                            location.reload();
+                        } else if (data["status"] == 1) {
+                            layer.msg('添加公钥失败');
+                        }
+                    }
+                });
+            });
         });
     </script>
 {% endblock %}
