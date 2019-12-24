@@ -1,0 +1,99 @@
+{% extends 'nav.html' %}
+{% load staticfiles %}
+{% block css %}
+<link rel="stylesheet" href="/static/layui/css/layui.css">
+{% endblock %}
+
+{% block content %}
+
+    <!-- 导航 -->
+    <div class="layui-row">
+        <div class="layui-col-xs2 layui-breadcrumb" style="visibility: visible; padding: 10px 10px 0px 10px;
+            line-height:28px;">
+            <a><cite>服务列表</cite></a>
+        </div>
+        <div class="layui-col-xs10" style="height:43px;">
+            <div class="layui-form-item" style="margin-top: 10px">
+                <form class="layui-form" lay-filter="selectForm1" action="">
+                    {% csrf_token %}
+                    <label class="layui-form-label">项目：</label>
+                    <div class="layui-input-inline">
+                        <select name="project" id="projectSelect" class="layui-input" lay-filter="projectClick">
+                            <option value="">请选择一个项目</option>
+                        </select>
+                    </div>
+                </form>
+                <form class="layui-form" lay-filter="selectForm2" action="">
+                    {% csrf_token %}
+                    <label class="layui-form-label">版本：</label>
+                    <div class="layui-input-inline">
+                        <select name="version" id="versionSelect" class="layui-input" lay-filter="versionClick">
+                            <option value="">请选择一个版本</option>
+                        </select>
+                    </div>
+                </form>
+                <form class="layui-form" lay-filter="selectForm1" action="">
+                    {% csrf_token %}
+                    <label class="layui-form-label">环境：</label>
+                    <div class="layui-input-inline">
+                        <select name="project" id="envSelect" class="layui-input" lay-filter="envClick">
+                            <option value="">请选择一个环境</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block script%}
+
+    <script>
+        layui.use(['table', 'jquery', 'layer', 'form'], function () {
+            var table = layui.table,
+                layer = layui.layer,
+                form = layui.form,
+                $ = layui.jquery;
+
+
+            //项目下拉框加载
+            var urlproj = '{% url 'project:get_projectlist' %}';
+            $.get(urlproj, function (result) {
+                var projects = result.data;
+                $('#projectSelect').html("");
+                var projectSelect = $("#projectSelect");
+                var projectOption = $("<option value=''>请选择一个项目</option>");
+                projectSelect.append(projectOption);
+                $.each(projects, function (index, data) {
+                    console.log(data.projectname);
+                    var projectOption = $("<option value='" + data.projectid + "'>" + data.projectname + "</option>");
+                    projectSelect.append(projectOption);
+                });
+                form.render('select', 'selectForm1');
+
+            });
+
+            //版本下拉框加载
+            form.on('select(projectClick)', function (data) {
+                console.log(data.value);
+                var projectid = data.value;
+                var urlversion =  '{% url 'project:get_versionlist' %}?projectid=' + projectid;
+                $.get(urlversion, function (result) {
+                    var projects = result.data;
+                    $('#versionSelect').html("");
+                    var versionSelect = $("#versionSelect");
+                    var versionOption = $("<option value=''>请选择一个版本</option>");
+                    versionSelect.append(versionOption);
+                    $.each(projects, function (index, data) {
+                        console.log(data.version);
+                        var versionOption = $("<option value='" + data.versionid + "'>" + data.version + "</option>");
+                        versionSelect.append(versionOption);
+                    });
+                    form.render('select', 'selectForm2');
+                })
+            });
+
+        });
+    </script>
+{% endblock %}

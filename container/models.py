@@ -10,8 +10,11 @@ class EwsServiceGroup(models.Model):
     service_group = models.CharField(max_length=255, blank=True, null=True)
     service_group_desc = models.CharField(max_length=255, blank=True, null=True)
     created_time = models.DateTimeField(blank=True, null=True)
-    tab_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    tab_project = models.ForeignKey(EwsProject, on_delete=models.CASCADE)
+    tab_version = models.ForeignKey(EwsProjectVersion, on_delete=models.CASCADE)
+    host = models.ManyToManyField(EwsHost)
     tab_group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    tab_user_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.service_group
@@ -33,7 +36,8 @@ class EwsService(models.Model):
     created_time = models.DateTimeField(blank=True, null=True)
     host = models.ManyToManyField(EwsHost)
     tab_service_group = models.ForeignKey(EwsServiceGroup, on_delete=models.CASCADE)
-    tab_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    tab_user_id = models.CharField(max_length=255, blank=True, null=True)
+    tab_group_id = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.service

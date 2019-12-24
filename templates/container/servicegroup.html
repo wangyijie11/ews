@@ -1,0 +1,85 @@
+{% extends 'nav.html' %}
+{% load staticfiles %}
+{% block css %}
+<link rel="stylesheet" href="/static/layui/css/layui.css">
+{% endblock %}
+
+{% block content %}
+    <div class="layui-row">
+        <div class="layui-col-xs4 layui-breadcrumb" style="visibility: visible; padding: 10px 10px 0px 10px;
+            line-height:28px;">
+            <a><cite>部署环境</cite></a>
+        </div>
+    </div>
+    <table id="servicegrouplist" lay-filter="tableDemo"></table>
+{% endblock %}
+
+{% block script%}
+     //数据行操作按钮
+    <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-xs" lay-event="add">添加</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+
+    //批量操作按钮
+    <script type="text/html" id="toolbarDemo">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+            <button class="layui-btn layui-btn-sm" lay-event="del">删除</button>
+        </div>
+    </script>
+
+    <script>
+        layui.use(['table', 'jquery', 'layer', 'form'], function () {
+            var table = layui.table,
+                layer = layui.layer,
+                form = layui.form,
+                $ = layui.jquery;
+
+            //表格渲染
+            table.render({
+                elem: '#servicegrouplist', //指定原始表格元素选择器（推荐id选择器）
+                url: '{% url 'container:get_servicegrouplist' %}',
+                method: 'get',
+                page: true, //分页
+                limit: 10,
+                skin: 'line', //行边框风格
+                even: true, //开启隔行背景
+                toolbar: '#toolbarDemo',
+                cols: [[
+                    {checkbox: true},
+                    {field: 'id', title: 'ID', width: '10%'},
+                    {field: 'service_group', title: '部署环境', width: '20%'},
+                    {field: 'project', title: '项目', width: '15%'},
+                    {field: 'version', title: '版本', width: '10%'},
+                    {field: 'host', title: '主机', width: '25%'},
+                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '16%'},
+                ]],
+            });
+
+            //监听工具条,每行
+            table.on('tool(tableDemo)', function (obj) { //注：tool是工具条事件名，host是table原始容器的属性 lay-filter="对应的值"
+                var data = obj.data; //获得当前行数据
+                var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+                if (layEvent === 'member') { //跳转
+                    window.location.href = "{% url 'users:userlist' %}?groupid=" + data.id
+                } else if (layEvent === 'del') { //删除
+
+                }
+            });
+
+            //监听工具栏事件,头部
+            table.on('toolbar(tableDemo)', function (obj) {
+                switch (obj.event) {
+                    case 'add':
+                       layer.confirm();
+                        break;
+                    case 'del':
+                        layer.confirm();
+                        break;
+                }
+            });
+
+        });
+    </script>
+{% endblock %}

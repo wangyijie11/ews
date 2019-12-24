@@ -68,13 +68,13 @@
                 toolbar: '#toolbarDemo',
                 cols: [[
                     {checkbox: true},
-                    {field: 'id', title: 'ID', width: '10%'},
-                    {field: 'service', title: '服务名', width: '10%'},
+                    {field: 'id', title: 'ID', width: '5%'},
+                    {field: 'service', title: '服务名', width: '15%'},
                     {field: 'state', title: '状态', width: '5%'},
-                    {field: 'image', title: '镜像', width: '10%'},
+                    {field: 'image', title: '镜像', width: '25%'},
                     {field: 'ip', title: 'IP', width: '10%'},
                     {field: 'port', title: '端口', width: '5%'},
-                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '41%'},
+                    {title: '操作', align: 'center', toolbar: '#barDemo', width: '31%'},
                 ]],
             });
 
@@ -106,7 +106,7 @@
 
             });
 
-            //选择版本后，表格重新加载
+            //表格重新加载
             form.on('select(envClick)', function (data) {
                 var service_group_id = data.value;
                 table.reload('servicelist', {
